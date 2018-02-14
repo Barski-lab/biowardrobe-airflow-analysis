@@ -1,0 +1,18 @@
+[Unit]
+Description=Airflow
+After=network.target mysql.service
+Wants=mysql.service 
+
+[Service]
+User=airflow
+WorkingDirectory = {AIRFLOW_HOME}
+Environment=
+KillMode=control-group
+ExecStart=/usr/local/bin/airflow webserver
+ExecStop=/bin/kill -s QUIT $MAINPID
+Restart=on-failure
+RestartSec=42s
+
+[Install]
+WantedBy=multi-user.target
+

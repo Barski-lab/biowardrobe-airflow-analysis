@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Disabled</key>
+	<true/>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.datirium.airflow-webserver</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/airflow</string>
+		<string>webserver</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>logs/com.datirium.airflow-webserver.stderr</string>
+	<key>StandardOutPath</key>
+	<string>logs/com.datirium.airflow-webserver.stdout</string>
+	<key>WorkingDirectory</key>
+	<string>{AIRFLOW_HOME}</string>
+</dict>
+</plist>

@@ -68,6 +68,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'cwltool',
+        'sqlparse',
         'jsonmerge',
         'ruamel.yaml < 0.15',
         'biowardrobe-cwl-workflows',
@@ -84,7 +85,9 @@ setup(
         '': ['*.sh'],
         'biowardrobe_airflow_analysis': [
             'sql_patch/biowardrobe_alter_table/*.sql',
-            'sql_patch/biowardrobe_patched_view/*.sql'
+            'sql_patch/biowardrobe_patched_view/*.sql',
+            'system/macosx/*.plist',
+            'system/ubuntu/*.plist'
         ]
     },
     cmdclass={'egg_info': tagger},
