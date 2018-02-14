@@ -333,7 +333,7 @@ dag_t = DAG(
         'email_on_failure': False,
         'email_on_retry': False
     },
-    schedule_interval='*/5 * * * *',
+    schedule_interval='*/10 * * * *',
     catchup=False,
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=60*24)

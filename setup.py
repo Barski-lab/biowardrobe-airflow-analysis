@@ -76,12 +76,16 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            "biowardrobe-init=biowardrobe-airflow-analysis.biowardrobe_init:generate_biowardrobe_workflow"
+            "biowardrobe-init=biowardrobe_airflow_analysis.biowardrobe_init:generate_biowardrobe_workflow"
         ]
     },
     include_package_data=True,
     package_data={
-        '': ['*.sh']
+        '': ['*.sh'],
+        'biowardrobe_airflow_analysis': [
+            'sql_patch/biowardrobe_alter_table/*.sql',
+            'sql_patch/biowardrobe_patched_view/*.sql'
+        ]
     },
     cmdclass={'egg_info': tagger},
     classifiers=[
