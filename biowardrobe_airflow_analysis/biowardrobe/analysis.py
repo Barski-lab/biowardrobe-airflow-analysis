@@ -9,7 +9,6 @@ from collections import OrderedDict
 import logging
 import decimal
 
-from .biow_exceptions import BiowBasicException, BiowFileNotFoundException
 from .utils import biowardrobe_settings, remove_not_set_inputs
 from .constants import (STAR_INDICES,
                         BOWTIE_INDICES,
@@ -24,11 +23,12 @@ from .constants import (STAR_INDICES,
 
 _logger = logging.getLogger(__name__)
 
+
 def get_biowardrobe_data(cursor, biowardrobe_uid):
     """Generate and export job file to a specific folder"""
     _settings=biowardrobe_settings(cursor)
 
-    _sql= f"""select e.etype, e.workflow, e.template, l.uid, g.db, g.findex, g.annotation, g.annottable,
+    _sql = f"""select e.etype, e.workflow, e.template, l.uid, g.db, g.findex, g.annotation, g.annottable,
         g.genome, l.forcerun, l.url,
         COALESCE(l.trim5,0) as clip_5p_end, COALESCE(l.trim3,0) as clip_3p_end,
         COALESCE(fragmentsizeexp,0) as exp_fragment_size, COALESCE(fragmentsizeforceuse,0) as force_fragment_size,
@@ -50,7 +50,7 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         return None
 
     def norm_path(path):
-        return  os.path.abspath(os.path.normpath(os.path.normcase(path)))
+        return os.path.abspath(os.path.normpath(os.path.normcase(path)))
 
     kwargs = row
     kwargs.update({
@@ -74,7 +74,7 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         "bowtie_indices_folder": norm_path("/".join((kwargs["indices"], BOWTIE_INDICES, kwargs["findex"] + RIBO_SUFFIX))),
         "chrom_length": norm_path("/".join((kwargs["indices"], BOWTIE_INDICES, kwargs["findex"], CHR_LENGTH_GENERIC_TSV))),
         "annotation_input_file": norm_path("/".join((kwargs["indices"], ANNOTATIONS, kwargs["findex"],
-                                                   ANNOTATION_GENERIC_TSV))),
+                                                     ANNOTATION_GENERIC_TSV))),
         "exclude_chr": "control" if kwargs["spike"] else "",
         "output_folder": norm_path("/".join((kwargs["raw_data"], kwargs["uid"]))),
         "control_file": None
@@ -85,13 +85,13 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
     #             kwargs['pair'] and not os.path.isfile(kwargs["fastq_file_downstream"])):
     #     raise BiowFileNotFoundException(kwargs["uid"])
 
-    kwargs = { key: (value if not isinstance(value, decimal.Decimal) else int(value)) for key, value in kwargs.items() }
+    kwargs = {key: (value if not isinstance(value, decimal.Decimal) else int(value)) for key, value in kwargs.items()}
 
     filled_job_object = remove_not_set_inputs(loads(
         kwargs['template'].replace('\n', ' ').format(**kwargs)))
     filled_job = OrderedDict(sorted(filled_job_object.items()))
 
-    kwargs['job']= filled_job
+    kwargs['job'] = filled_job
 
     _logger.info("Result: \n{}".format(dumps(kwargs, indent=4)))
     return kwargs

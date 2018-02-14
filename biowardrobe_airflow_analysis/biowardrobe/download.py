@@ -8,24 +8,22 @@ from contextlib import closing
 from datetime import timedelta, datetime
 import re
 import uuid
+import os
 
 import airflow
-from airflow.models import DAG, BaseOperator, DagRun
+from airflow.models import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.operators.dagrun_operator import DagRunOrder, TriggerDagRunOperator
-from airflow import settings
-from airflow.operators.sensors import SqlSensor
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.exceptions import AirflowSkipException
-from airflow.utils.decorators import apply_defaults
+from airflow.models import Variable
+from airflow.exceptions import AirflowException, AirflowSensorTimeout, AirflowSkipException
 
 from .analysis import get_biowardrobe_data
 from .constants import biowardrobe_connection_id
 from ..operators.biowardrobetriggers import BioWardrobeTriggerDownloadOperator, BioWardrobeTriggerBasicAnalysisOperator
+
 
 _logger = logging.getLogger(__name__)
 
@@ -37,6 +35,57 @@ _logger = logging.getLogger(__name__)
 #     def execute(self, context):
 #         raise AirflowSkipException
 
+
+PROXY = Variable.get("PROXY", default_var="")
+EXTRA_LOCAL_SCRIPT = Variable.get("EXTRA_LOCAL_SCRIPT", default_var="")
+
+
+#
+#  On Retry Callback
+#
+def on_retry(context):
+    biowardrobe_uid = context['dag_run'].conf['biowardrobe_uid'] \
+        if 'biowardrobe_uid' in context['dag_run'].conf else None
+
+    if not biowardrobe_uid:
+        raise Exception('biowardrobe_id must be provided')
+
+    mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
+    with closing(mysql.get_conn()) as conn:
+        with closing(conn.cursor()) as cursor:
+            cursor.execute(
+                "update labdata set libstatus=1000, libstatustxt='Download Failed. Retry!' where uid='{}'".format(
+                    biowardrobe_uid))
+            conn.commit()
+
+
+_extra_local_file_ = EXTRA_LOCAL_SCRIPT if EXTRA_LOCAL_SCRIPT else \
+    os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/extra_local_download.sh")
+_extra_local_file_content = ""
+if os.path.isfile(_extra_local_file_):
+    with open(_extra_local_file_, 'r') as content_file:
+        _extra_local_file_content = content_file.read()
+
+download_base = """
+UUID="{{ ti.xcom_pull(task_ids='branch_download', key='uid') }}"
+URL="{{ ti.xcom_pull(task_ids='branch_download', key='url') }}"
+
+UDIR="{{ ti.xcom_pull(task_ids='branch_download', key='upload') }}"
+DIR="{{ ti.xcom_pull(task_ids='branch_download', key='output_folder') }}"
+
+user_agent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+
+TMPFILE='aria2downloadfile'   #`mktemp -u XXXXXXXX` || exit 1
+
+mkdir -p "${DIR}"
+chmod 0777 "${DIR}"
+cd "${DIR}" || exit 1
+
+"""+f"""
+
+PROXY="{PROXY}"
+
+"""
 
 args = {
     'owner': 'airflow',
@@ -51,9 +100,8 @@ args = {
     'max_retry_delay': timedelta(minutes=60*24)
 }
 
-
 #
-#    BIOWARDROBE DOWNLOAD PIPELINE (be triggered)
+#    BIOWARDROBE DOWNLOAD WORKFLOW (be triggered)
 #
 
 DAG_NAME = 'biowardrobe_download'
@@ -105,25 +153,6 @@ branch_download = BranchPythonOperator(
     python_callable=branch_download_func,
     dag=dag)
 
-
-download_base = """
-UUID="{{ ti.xcom_pull(task_ids='branch_download', key='uid') }}"
-URL="{{ ti.xcom_pull(task_ids='branch_download', key='url') }}"
-
-UDIR="{{ ti.xcom_pull(task_ids='branch_download', key='upload') }}"
-DIR="{{ ti.xcom_pull(task_ids='branch_download', key='output_folder') }}"
-PROXY=""
-
-user_agent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-
-TMPFILE='aria2downloadfile'   #`mktemp -u XXXXXXXX` || exit 1
-
-mkdir -p "${DIR}"
-chmod 0777 "${DIR}"
-cd "${DIR}" || exit 1
-
-"""
-
 #
 #  A STEP
 #
@@ -173,6 +202,7 @@ url_download = BashOperator(
     task_id='download_aria2',
     xcom_push=True,
     bash_command=download_aria2,
+    on_retry_callback=on_retry,
     dag=dag)
 url_download.set_upstream(branch_download)
 
@@ -198,6 +228,7 @@ cli_download_sra = BashOperator(
     task_id='download_sra',
     xcom_push=True,
     bash_command=download_sra,
+    on_retry_callback=on_retry,
     dag=dag)
 cli_download_sra.set_upstream(branch_download)
 
@@ -207,7 +238,7 @@ cli_download_sra.set_upstream(branch_download)
 #
 download_local = download_base + """
 #
-#check local dir bifore core !!!
+#check local dir !!!
 #
 
 FTEST=`find ${UDIR}  -type f -name "*${URL}*" -print|wc -l`
@@ -245,72 +276,13 @@ else
   fi
 fi
 
-
-#
-# Core
-#
-
-main_page="https://dna.cchmc.org/www/main.php"
-login_page="https://dna.cchmc.org/www/logon2.php"
-request_page="https://dna.cchmc.org/www/results/nextgen_results.php"
-download_url="https://dna.cchmc.org/www/results/nextgen_download.php?file="
-
-cookie_file=`mktemp ./dna.XXXXXX`
-file_list=`mktemp ./dna.XXXXXX`
-
-user_name=""
-user_pass=""
-
-curl -s -i --insecure -b ${cookie_file} -c ${cookie_file} -A ${user_agent} -X POST --form "username=${user_name}" \
---form "password=${user_pass}" $login_page >/dev/null 2>&1
-curl -s -i --insecure -b ${cookie_file} $request_page -A ${user_agent}|grep 'href="javascript:downloadFile'| \
-awk -F"'" '{print $2}'|grep "${URL}" >${file_list} 2>&1
-
-#    foo=$1
-#    path=${foo%/*}
-#    FN=${foo##*/}
-#    base=${FN%%.*}
-#    ext=${FN#*.}
-
-lines=1
-while read download_file; do
-
- aria2c -q -d ./ --user-agent="${user_agent}" --always-resume --allow-overwrite --max-resume-failure-tries=20 \
- --load-cookies=${cookie_file} \
- "${download_url}${download_file}&name=download_${lines}.fastq.gz"
-
- ARIA=$?
- if [ ${ARIA} -ne 0 ]; then
-    rm -f "download_1.fastq.gz"
-    rm -f "download_1.fastq.gz.aria2"
-    rm -f "download_2.fastq.gz"
-    rm -f "download_2.fastq.gz.aria2"
-    exit ${ARIA}
- fi
-
- lines=$((lines+1))
- [ $lines -gt 2 ] && echo "Error: core 2 files max" && break
-
-done < <(cat ${file_list})
-
-if [ -f "download_1.fastq.gz" ]; then
- 7z e -so "download_1.fastq.gz" >"./${UUID}.fastq"
- rm -f "download_1.fastq.gz"
-fi
-
-if [ -f "download_2.fastq.gz" ]; then
- 7z e -so "download_2.fastq.gz" >"./${UUID}_2.fastq"
- rm -f "download_2.fastq.gz"
-fi
-
-rm -f ${cookie_file}
-rm -f ${file_list}
-"""
+"""+_extra_local_file_content
 
 download_local_operator = BashOperator(
     task_id='download_local',
     xcom_push=True,
     bash_command=download_local,
+    on_retry_callback=on_retry,
     dag=dag)
 download_local_operator.set_upstream(branch_download)
 
@@ -337,7 +309,7 @@ success_finish_operator.set_upstream([cli_download_sra, url_download, download_l
 error_finish_operator = MySqlOperator(
     task_id="finish_with_error",
     mysql_conn_id=biowardrobe_connection_id,
-    sql="""update ems.labdata set libstatus=0,
+    sql="""update labdata set libstatus=2000,
         libstatustxt="{{ ti.xcom_pull(task_ids=['download_sra','download_local', 'download_aria2'], key=None) }}"
         where uid='{{ ti.xcom_pull(task_ids='branch_download', key='uid') }}'""",
     trigger_rule=TriggerRule.ONE_FAILED,

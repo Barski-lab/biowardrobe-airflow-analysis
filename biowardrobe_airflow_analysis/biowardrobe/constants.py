@@ -1,5 +1,3 @@
-biowardrobe_connection_id="biowardrobe"
-
 from .db_uploader import (upload_macs2_fragment_stat,
                           upload_iaintersect_result,
                           upload_get_stat,
@@ -27,6 +25,7 @@ LIBSTATUS = {
 }
 
 
+biowardrobe_connection_id = "biowardrobe"
 BOWTIE_INDICES = "bowtie"
 RIBO_SUFFIX = "_ribo"
 STAR_INDICES = "STAR"

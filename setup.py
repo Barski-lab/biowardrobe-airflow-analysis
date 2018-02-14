@@ -21,59 +21,90 @@
 
 
 from setuptools import setup, find_packages
-import os
-from setuptools.command.install import install
-from subprocess import check_call
+from os import path
+from subprocess import check_output, CalledProcessError
+from time import strftime, gmtime
+from setuptools.command.egg_info import egg_info
+
+SETUP_DIR = path.dirname(__file__)
+README = path.join(SETUP_DIR, 'README.md')
 
 
-class ActionOnInstall(install):
-    def run(self):
-        try:
-            check_call(['git', 'clone', '-b', 'v1.0.2', '--single-branch', "https://github.com/Barski-lab/workflows/",
-                        "biowardrobe_airflow_analysis/biowardrobe_workflows"])
-        except:
-            pass
-        install.run(self)
+class EggInfoFromGit(egg_info):
+    """Tag the build with git commit timestamp.
+
+    If a build tag has already been set (e.g., "egg_info -b", building
+    from source package), leave it alone.
+    """
+
+    def git_timestamp_tag(self):
+        gitinfo = check_output(
+            ['git', 'log', '--first-parent', '--max-count=1',
+             '--format=format:%ct', '.']).strip()
+        return strftime('.%Y%m%d%H%M%S', gmtime(int(gitinfo)))
+
+    def tags(self):
+        if self.tag_build is None:
+            try:
+                self.tag_build = self.git_timestamp_tag()
+            except CalledProcessError:
+                pass
+        return egg_info.tags(self)
+
+
+tagger = EggInfoFromGit
+
 
 setup(
     name='biowardrobe-airflow-analysis',
     description='Python package to extend BioWardrobe functionality with CWL Airflow',
-    long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
-    version='1.0.0',
+    long_description=open(README).read(),
+    version='1.0',
     url='https://github.com/datirium/biowardrobe-airflow-analysis',
     download_url='https://github.com/datirium/biowardrobe-airflow-analysis',
     author='Datirium, LLC',
-    author_email='porter@datirium.com',
-    license='Apache-2.0',
-#    packages=find_packages('biowardrobe_airflow_analysis'),
+    author_email='support@datirium.com',
+    # license='Apache-2.0',
     packages=find_packages(),
     install_requires=[
         'cwltool',
         'jsonmerge',
         'ruamel.yaml < 0.15',
-        'MySQLdb',
+        'biowardrobe-cwl-workflows',
         'apache-airflow >= 1.9.0, < 2'
     ],
-    cmdclass={
-        'install': ActionOnInstall
-    },
     zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            "biowardrobe-init=biowardrobe-airflow-analysis.biowardrobe_init:generate_biowardrobe_workflow"
+        ]
+    },
     include_package_data=True,
     package_data={
-        'biowardrobe_airflow_analysis': ['biowardrobe_workflows/workflows/*.cwl',
-                                         'biowardrobe_workflows/expressiontools/*.cwl',
-                                         'biowardrobe_workflows/metadata/*.cwl',
-                                         'biowardrobe_workflows/tools/*.cwl',
-                                         'biowardrobe_workflows/tools/metadata/*.yaml',
-                                         'biowardrobe_workflows/tools/metadata/*.yml']
-    }
-    # dependency_links=[
-    #  "https://github.com/Barski-lab/workflows/archive/v1.0.2.zip#egg=biowardrobe_workflows-1.0.2"
-    #  "git+https://github.com/Barski-lab/workflows/tree/v1.0.2#egg=biowardrobe_workflows-1.0.2"
-    # ],
-    #    entry_points={
-    #        'console_scripts': [
-    #            "cwl-airflow-parser=cwl-airflow-parser.main:main"
-    #        ]
-    #    }
+        '': ['*.sh']
+    },
+    cmdclass={'egg_info': tagger},
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Environment :: Other Environment',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Healthcare Industry',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: OS Independent',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: Microsoft :: Windows :: Windows 10',
+        'Operating System :: Microsoft :: Windows :: Windows 8.1',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Chemistry',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Medical Science Apps.'
+    ]
 )

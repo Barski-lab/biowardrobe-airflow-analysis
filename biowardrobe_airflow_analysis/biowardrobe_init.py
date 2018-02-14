@@ -21,7 +21,6 @@
 
 
 import os
-import sys
 
 from .biowardrobe import Settings
 
@@ -42,4 +41,4 @@ dag = create_biowardrobe_workflow("{}")
 
 
 # if __name__ == "__main__":
-generate_biowardrobe_workflow()
+# generate_biowardrobe_workflow()
