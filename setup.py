@@ -87,7 +87,7 @@ setup(
             'sql_patch/biowardrobe_alter_table/*.sql',
             'sql_patch/biowardrobe_patched_view/*.sql',
             'system/macosx/*.plist',
-            'system/ubuntu/*.plist'
+            'system/ubuntu/*.service'
         ]
     },
     cmdclass={'egg_info': tagger},

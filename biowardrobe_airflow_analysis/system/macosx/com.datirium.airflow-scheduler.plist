@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Disabled</key>
+	<true/>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>OBJC_DISABLE_INITIALIZE_FORK_SAFETY</key>
+		<string>YES</string>
+		<key>PATH</key>
+		<string>/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.datirium.airflow-scheduler</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/airflow</string>
+		<string>scheduler</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>logs/com.datirium.airflow-scheduler.stderr</string>
+	<key>StandardOutPath</key>
+	<string>logs/com.datirium.airflow-scheduler.stdout</string>
+	<key>WorkingDirectory</key>
+	<string>{AIRFLOW_HOME}</string>
+</dict>
+</plist>
