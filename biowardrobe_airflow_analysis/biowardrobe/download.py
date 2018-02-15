@@ -94,6 +94,7 @@ args = {
     'email': ['biowardrobe@biowardrobe.com'],
     'email_on_failure': False,
     'email_on_retry': False,
+    'pool': 'biowardrobe_download',
     'retries': 1000,
     'retry_exponential_backoff': True,
     'retry_delay': timedelta(minutes=10),
@@ -110,7 +111,6 @@ dag = DAG(
     dag_id=DAG_NAME,
     default_args=args,
     schedule_interval=None,
-    max_active_runs=5,
     default_view='tree'
 )
 
