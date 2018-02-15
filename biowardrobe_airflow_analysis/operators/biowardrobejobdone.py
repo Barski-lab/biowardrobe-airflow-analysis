@@ -9,14 +9,17 @@ from airflow.models import BaseOperator
 from airflow.utils import apply_defaults
 from airflow.hooks.mysql_hook import MySqlHook
 
+from cwltool.process import relocateOutputs
+from cwltool.stdfsaccess import StdFsAccess
+
+from cwl_airflow_parser.cwlstepoperator import CWLStepOperator
+
 from ..biowardrobe.analysis import get_biowardrobe_data
 from ..biowardrobe.utils import update_status
 from ..biowardrobe.constants import biowardrobe_connection_id, EXP_TYPE_UPLOAD
 from ..biowardrobe.db_uploader import upload_results_to_db
 from ..biowardrobe.biow_exceptions import BiowBasicException
 
-from cwltool.process import relocateOutputs
-from cwltool.stdfsaccess import StdFsAccess
 
 
 _logger = logging.getLogger(__name__)
@@ -58,7 +61,7 @@ class BioWardrobeJobDone(BaseOperator):
         self.reader_task_id = reader_task_id if reader_task_id else self.reader_task_id
 
     def execute(self, context):
-        upstream_task_ids = [t.task_id for t in self.upstream_list] + \
+        upstream_task_ids = [t.task_id for t in self.dag.tasks if isinstance(t, CWLStepOperator)] + \
                             ([self.reader_task_id] if self.reader_task_id else [])
         upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
 
@@ -67,7 +70,7 @@ class BioWardrobeJobDone(BaseOperator):
 
         promises = {}
         for data in upstream_data:
-            promises = merge(promises, data["promises"])
+            promises = merge(promises, data["promises"]) if "promises" in data else promises
             if "outdir" in data:
                 self.outdir = data["outdir"]
 
