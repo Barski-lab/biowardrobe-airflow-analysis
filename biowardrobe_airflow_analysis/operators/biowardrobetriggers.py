@@ -58,8 +58,7 @@ class BioWardrobeTriggerDownloadOperator(BaseOperator):
         with closing(mysql.get_conn()) as conn:
             with closing(conn.cursor()) as cursor:
                 cursor.execute("""select id, uid from ems.labdata
-                                  where libstatus in (0,1000)
-                                        and deleted=0 and url is not NULL and url <> "" """)
+                                  where libstatus = 0 and deleted=0 and url is not NULL and url <> "" """)
                 for row in cursor.fetchall():
                     _logger.info("Trigger download with: {}".format(row))
                     _run_id = 'trig__{}__{}'.format(row['uid'], uuid.uuid4())
