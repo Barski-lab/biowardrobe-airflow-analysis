@@ -45,7 +45,7 @@ def generate_biowardrobe_workflow():
 
     field_names = [i[0] for i in _settings.cursor.description]
     if 'workflow' in field_names:
-        apply_sql_patch("experimenttype_patch.sql")
+        apply_sql_patch("experimenttype_drop_alter.sql")
     apply_sql_patch("experimenttype_patch.sql")
 
     _template = u"""#!/usr/bin/env python3

@@ -105,7 +105,7 @@ class BioWardrobeJobDone(BaseOperator):
                     _params['promoter'] = 1000
                 _params.update(_job_result)
                 params = dumps(_params)
-                
+
                 try:
                     upload_results_to_db(upload_set=EXP_TYPE_UPLOAD[_data['etype']],
                                          uid=promises['uid'],
