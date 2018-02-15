@@ -90,7 +90,9 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
     kwargs = {key: (value if not isinstance(value, decimal.Decimal) else int(value)) for key, value in kwargs.items()}
 
     filled_job_object = remove_not_set_inputs(loads(
-        kwargs['template'].replace('\n', ' ').format(**kwargs)))
+        kwargs['template'].replace('\n', ' ').format(**kwargs))). \
+        replace("'True'", 'true').replace("'False'", 'false'). \
+        replace('"True"', 'true').replace('"False"', 'false')
     filled_job = OrderedDict(sorted(filled_job_object.items()))
 
     kwargs['job'] = filled_job
