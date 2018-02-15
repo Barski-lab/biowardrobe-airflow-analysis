@@ -1,7 +1,7 @@
 import logging
 import os
 import shutil
-from json import dumps
+from json import dumps, loads
 from jsonmerge import merge
 from contextlib import closing
 
@@ -99,7 +99,13 @@ class BioWardrobeJobDone(BaseOperator):
         with closing(mysql.get_conn()) as conn:
             with closing(conn.cursor()) as cursor:
                 _data = get_biowardrobe_data(cursor, promises['uid'])
+                _params = loads(_data['params'])
 
+                if 'promoter' not in _params:
+                    _params['promoter'] = 1000
+                _params.update(_job_result)
+                params = dumps(_params)
+                
                 try:
                     upload_results_to_db(upload_set=EXP_TYPE_UPLOAD[_data['etype']],
                                          uid=promises['uid'],
@@ -112,7 +118,7 @@ class BioWardrobeJobDone(BaseOperator):
                                   code=12,
                                   conn=conn,
                                   cursor=cursor,
-                                  optional_column="dateanalyzee=now()")
+                                  optional_column=f"dateanalyzee=now(),params='{params}'")
                 except BiowBasicException as ex:
                     update_status(uid=promises['uid'],
                                   message=f'Fail:{ex}',

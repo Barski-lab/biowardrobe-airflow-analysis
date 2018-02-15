@@ -111,8 +111,8 @@ def upload_iaintersect_result(self, uid, filename):
                          from {table_name} group by chrom,start,end; """)
     self.conn.commit()
 
-    self.cursor.execute("""update labdata set params='{"promoter":1000}' where uid=%s""", (uid,))
-    self.conn.commit()
+    # self.cursor.execute("""update labdata set params='{"promoter":1000}' where uid=%s""", (uid,))
+    # self.conn.commit()
 
 
 def upload_get_stat(self, uid, filename):

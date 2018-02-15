@@ -28,10 +28,10 @@ _logger = logging.getLogger(__name__)
 @lru_cache(maxsize=128)
 def get_biowardrobe_data(cursor, biowardrobe_uid):
     """Generate and export job file to a specific folder"""
-    _settings=biowardrobe_settings(cursor)
+    _settings = biowardrobe_settings(cursor)
 
     _sql = f"""select e.etype, e.workflow, e.template, l.uid, g.db, g.findex, g.annotation, g.annottable,
-        g.genome, l.forcerun, l.url,
+        g.genome, l.forcerun, l.url, COALESCE(l.params,'{{}}') as params,
         COALESCE(l.trim5,0) as clip_5p_end, COALESCE(l.trim3,0) as clip_3p_end,
         COALESCE(fragmentsizeexp,0) as exp_fragment_size, COALESCE(fragmentsizeforceuse,0) as force_fragment_size,
         g.gsize as genome_size,
