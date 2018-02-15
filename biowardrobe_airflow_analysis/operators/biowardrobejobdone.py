@@ -79,14 +79,15 @@ class BioWardrobeJobDone(BaseOperator):
         else:
             return
 
+        #  TODO: check what happens with original input should we update file info {basename:...} ?
         _move_job = {out: promises[out]
                      for out, val in self.outputs.items()
                      }
-        _logger.info('{0}: Final job: \n{1}\nMoving data: \n{2}\nFinal job:{3}'.
-                     format(self.task_id,
-                            dumps(promises, indent=4),
-                            dumps(self.outputs, indent=4),
-                            dumps(_move_job, indent=4)))
+        _logger.debug('{0}: Final job: \n{1}\nMoving data: \n{2}\nMoving job:{3}'.
+                      format(self.task_id,
+                             dumps(promises, indent=4),
+                             dumps(self.outputs, indent=4),
+                             dumps(_move_job, indent=4)))
 
         _files_moved = relocateOutputs(_move_job, self.output_folder, [self.outdir], "move", StdFsAccess(""))
         _job_result = {val.split("/")[-1]: _files_moved[out]  # TODO: is split required?
@@ -108,10 +109,9 @@ class BioWardrobeJobDone(BaseOperator):
                 _data = get_biowardrobe_data(cursor, promises['uid'])
                 _params = loads(_data['params'])
 
-                if 'promoter' not in _params:
-                    _params['promoter'] = 1000
-                _params.update(_job_result)
-                params = dumps(_params)
+                _promoter = _params['promoter'] if 'promoter' in _params else 1000
+                _params = _job_result
+                _params['promoter'] = _promoter
 
                 try:
                     upload_results_to_db(upload_set=EXP_TYPE_UPLOAD[_data['etype']],
@@ -121,11 +121,11 @@ class BioWardrobeJobDone(BaseOperator):
                                          conn=conn
                                          )
                     update_status(uid=promises['uid'],
-                                  message='complete',
+                                  message='Complete:upgraded',
                                   code=12,
                                   conn=conn,
                                   cursor=cursor,
-                                  optional_column=f"dateanalyzee=now(),params='{params}'")
+                                  optional_column="dateanalyzee=now(),params='{}'".format(dumps(_params)))
                 except BiowBasicException as ex:
                     update_status(uid=promises['uid'],
                                   message=f'Fail:{ex}',

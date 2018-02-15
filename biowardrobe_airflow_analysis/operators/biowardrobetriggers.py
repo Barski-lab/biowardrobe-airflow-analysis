@@ -59,23 +59,26 @@ class BioWardrobeTriggerDownloadOperator(BaseOperator):
             with closing(conn.cursor()) as cursor:
                 cursor.execute("""select id, uid from ems.labdata
                                   where libstatus = 0 and deleted=0 and url is not NULL and url <> "" """)
+                session = settings.Session()
                 for row in cursor.fetchall():
                     _logger.info("Trigger download with: {}".format(row))
                     _run_id = 'trig__{}__{}'.format(row['uid'], uuid.uuid4())
-                    session = settings.Session()
+
                     dr = DagRun(
                         dag_id=self.trigger_dag_id,
                         run_id=_run_id,
                         conf={'biowardrobe_uid': row['uid'], 'run_id': _run_id},
                         execution_date=datetime.now(),
+                        start_date=datetime.now(),
                         external_trigger=True)
                     logging.info("Creating DagRun {}".format(dr))
                     session.add(dr)
                     session.commit()
-                    session.close()
 
-                    cursor.execute("update ems.labdata set libstatus=1, deleted=0 where uid='{}' ".format(row['uid']))
+                    cursor.execute("update ems.labdata set libstatus=1, deleted=0 where uid=%s ", (row['uid'],))
                     conn.commit()
+
+                session.close()
 
 
 class BioWardrobeTriggerBasicAnalysisOperator(BaseOperator):
@@ -103,9 +106,8 @@ class BioWardrobeTriggerBasicAnalysisOperator(BaseOperator):
         mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
         with closing(mysql.get_conn()) as conn:
             with closing(conn.cursor()) as cursor:
-                cursor.execute(
-                    "update ems.labdata set libstatus=10, libstatustxt='downloaded' where uid='{}'".format(
-                        biowardrobe_uid))
+                cursor.execute("update ems.labdata set libstatus=10, libstatustxt='downloaded' where uid=%s",
+                               (biowardrobe_uid,))
                 conn.commit()
                 data = get_biowardrobe_data(cursor=cursor,
                                             biowardrobe_uid=biowardrobe_uid)
