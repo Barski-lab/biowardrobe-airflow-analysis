@@ -27,13 +27,8 @@ LIBSTATUS = {
 
 biowardrobe_connection_id = "biowardrobe"
 BOWTIE_INDICES = "bowtie"
-RIBO_SUFFIX = "_ribo"
 STAR_INDICES = "STAR"
 ANNOTATIONS = "annotations"
-JOBS_NEW = 'new'
-JOBS_SUCCESS = 'success'
-JOBS_FAIL = 'fail'
-JOBS_RUNNING = 'running'
 CHR_LENGTH_GENERIC_TSV = "chrNameLength.txt"
 ANNOTATION_GENERIC_TSV = "refgene.tsv"
 
