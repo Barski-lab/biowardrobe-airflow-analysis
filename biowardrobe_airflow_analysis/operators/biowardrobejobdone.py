@@ -79,12 +79,16 @@ class BioWardrobeJobDone(BaseOperator):
         else:
             return
 
-        _logger.info('{0}: Final job: \n{1}\nMoving data: \n{2}'.
+        _move_job = {out: promises[out]
+                     for out, val in self.outputs.items()
+                     }
+        _logger.info('{0}: Final job: \n{1}\nMoving data: \n{2}\nFinal job:{3}'.
                      format(self.task_id,
                             dumps(promises, indent=4),
-                            dumps(self.outputs, indent=4)))
+                            dumps(self.outputs, indent=4),
+                            dumps(_move_job, indent=4)))
 
-        _files_moved = relocateOutputs(promises, self.output_folder, [self.outdir], "move", StdFsAccess(""))
+        _files_moved = relocateOutputs(_move_job, self.output_folder, [self.outdir], "move", StdFsAccess(""))
         _job_result = {val.split("/")[-1]: _files_moved[out]  # TODO: is split required?
                        for out, val in self.outputs.items()
                        if out in _files_moved
