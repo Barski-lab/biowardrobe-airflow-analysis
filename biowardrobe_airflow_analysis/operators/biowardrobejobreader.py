@@ -1,7 +1,7 @@
 import logging
 import os
 from tempfile import mkdtemp
-import json
+from json import dumps
 from contextlib import closing
 
 from airflow.models import BaseOperator
@@ -9,6 +9,9 @@ from airflow.utils.decorators import apply_defaults
 from airflow.hooks.mysql_hook import MySqlHook
 
 from ..biowardrobe.analysis import get_biowardrobe_data
+from ..biowardrobe.utils import update_status
+from ..biowardrobe.constants import biowardrobe_connection_id
+
 
 _logger = logging.getLogger(__name__)
 
@@ -39,22 +42,38 @@ class BioWardrobeJobReader(BaseOperator):
             }
             _json = {}
             _data = {}
-            if 'biowardrobe_uid' in context['dag_run'].conf:
-                mysql = MySqlHook(mysql_conn_id='biowardrobe')
-                with closing(mysql.get_conn()) as conn:
-                    with closing(conn.cursor()) as cursor:
-                        _data = get_biowardrobe_data(cursor, context['dag_run'].conf['biowardrobe_uid'])
-                        _json = _data['job']
 
             if 'job' in context['dag_run'].conf:
                 logging.debug(
                     '{0}: dag_run conf: \n {1}'.format(self.task_id, context['dag_run'].conf['job']))
                 _json = context['dag_run'].conf['job']
 
+            mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
+            with closing(mysql.get_conn()) as conn:
+                with closing(conn.cursor()) as cursor:
+                    if 'biowardrobe_uid' in context['dag_run'].conf:
+                        _data = get_biowardrobe_data(cursor, context['dag_run'].conf['biowardrobe_uid'])
+                        _json = _data['job']
+
+                    update_status(uid=_json['uid'],
+                                  message='Analysing',
+                                  code=11,
+                                  conn=conn,
+                                  cursor=cursor,
+                                  optional_column="forcerun=0, dateanalyzes=now()")
+
+                    update_status(uid=_json['uid'],
+                                  message='Analysing',
+                                  code=11,
+                                  conn=conn,
+                                  cursor=cursor,
+                                  optional_column="dateanalyzed=now()",
+                                  optional_where="and dateanalyzed is null")
+
             cwl_context['promises'] = _json
 
             logging.info(
-                '{0}: Final job: \n {1}'.format(self.task_id, json.dumps(cwl_context, indent=4)))
+                '{0}: Final job: \n {1}'.format(self.task_id, dumps(cwl_context, indent=4)))
 
             return cwl_context
 

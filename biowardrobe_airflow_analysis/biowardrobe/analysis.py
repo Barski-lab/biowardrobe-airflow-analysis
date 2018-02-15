@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""RNA-Seq SE(dUTP)/PE(dUTP), script produces jobs for four workflows"""
+"""RNA-Seq SE(dUTP)/PE(dUTP), ChIP-Seq SE/PE script produces jobs for four workflows"""
 
 import os
 import datetime
@@ -8,6 +8,7 @@ from json import dumps, loads
 from collections import OrderedDict
 import logging
 import decimal
+from functools import lru_cache
 
 from .utils import biowardrobe_settings, remove_not_set_inputs
 from .constants import (STAR_INDICES,
@@ -24,6 +25,7 @@ from .constants import (STAR_INDICES,
 _logger = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=128)
 def get_biowardrobe_data(cursor, biowardrobe_uid):
     """Generate and export job file to a specific folder"""
     _settings=biowardrobe_settings(cursor)
@@ -42,7 +44,7 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         and l.uid='{biowardrobe_uid}'
         order by dateadd"""
 
-    _logger.info(f"SQL: {_sql}")
+    _logger.debug(f"SQL: {_sql}")
 
     cursor.execute(_sql)
     row = cursor.fetchone()

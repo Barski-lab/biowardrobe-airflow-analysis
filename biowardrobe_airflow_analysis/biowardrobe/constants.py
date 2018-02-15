@@ -12,16 +12,16 @@ from .db_uploader import (upload_macs2_fragment_stat,
 
 
 LIBSTATUS = {
-    "START_DOWNLOAD":    0,    # Start downloading
-    "FAIL_DOWNLOAD":     2000, # Downloading error
-    "SUCCESS_DOWNLOAD":  2,    # Downloading succeed
-    "JOB_CREATED":       1010, # Job file is created
-    "RESTART_DOWNLOAD":  1000, # Restart downloading
-    "DOWNLOADING":       1,    # Downloading
-    "START_PROCESS":     10,   # Start processing
-    "FAIL_PROCESS":      2010, # Processing failed
-    "SUCCESS_PROCESS":   12,   # Processing succeed
-    "PROCESSING":        11    # Processing
+    "START_DOWNLOAD":    0,     # Start downloading
+    "FAIL_DOWNLOAD":     2000,  # Downloading error
+    "SUCCESS_DOWNLOAD":  2,     # Downloading succeed
+    "JOB_CREATED":       1010,  # Job file is created
+    "RESTART_DOWNLOAD":  1000,  # Restart downloading
+    "DOWNLOADING":       1,     # Downloading
+    "START_PROCESS":     10,    # Start processing
+    "FAIL_PROCESS":      2010,  # Processing failed
+    "SUCCESS_PROCESS":   12,    # Processing succeed
+    "PROCESSING":        11     # Processing
 }
 
 
@@ -50,8 +50,6 @@ CHIP_SEQ_UPLOAD = {
     '{}*.fastq': delete_files
 }
 
-CHIP_SEQ_GEN_BIGWIG_UPLOAD = {'{}.bigWig': upload_bigwig}
-
 # For both SE and PE (not dUTP)
 RNA_SEQ_UPLOAD = {
     '{}.bigWig': upload_bigwig,
@@ -73,12 +71,15 @@ RNA_SEQ_DUTP_UPLOAD = {
     '{}*.fastq': delete_files
 }
 
+CHIP_SEQ_GEN_BIGWIG_UPLOAD = {'{}.bigWig': upload_bigwig}
+
 # Upload functions for each experiment type
 EXP_TYPE_UPLOAD = {
     "RNA-Seq":           RNA_SEQ_UPLOAD,
     "RNA-Seq dUTP":      RNA_SEQ_DUTP_UPLOAD,
     "RNA-Seq pair":      RNA_SEQ_UPLOAD,
     "RNA-Seq dUTP pair": RNA_SEQ_DUTP_UPLOAD,
+    "RNA-Seq dUTP Mitochondrial": RNA_SEQ_DUTP_UPLOAD,
     "DNA-Seq":           CHIP_SEQ_UPLOAD,
     "DNA-Seq pair":      CHIP_SEQ_UPLOAD
 }

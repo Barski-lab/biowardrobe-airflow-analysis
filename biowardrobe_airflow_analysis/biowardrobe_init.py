@@ -25,31 +25,34 @@ from sqlparse import split
 
 from .biowardrobe import Settings
 
+sql_folder = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sql_patch"))
+system_folder = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "system"))
+
+_settings = Settings.Settings()
+
+
+def apply_sql_patch(file):
+    experimenttype_alter = os.path.join(sql_folder, "biowardrobe_tables", file)
+    for _sql in split(open(experimenttype_alter).read()):
+        if not _sql:
+            continue
+        _settings.cursor.execute(_sql)
+        _settings.conn.commit()
 
 def generate_biowardrobe_workflow():
+
+    _settings.cursor.execute("select * from experimenttype limit 1")
+
+    field_names = [i[0] for i in _settings.cursor.description]
+    if 'workflow' in field_names:
+        apply_sql_patch("experimenttype_patch.sql")
+    apply_sql_patch("experimenttype_patch.sql")
+
     _template = u"""#!/usr/bin/env python3
 from airflow import DAG
 from biowardrobe_airflow_analysis.biowardrobe_workflows import create_biowardrobe_workflow
 dag = create_biowardrobe_workflow("{}")
 """
-    _settings = Settings.Settings()
-    _settings.cursor.execute("select * from experimenttype limit 1")
-
-    num_fields = len(_settings.cursor.description)
-
-    field_names = [i[0] for i in _settings.cursor.description]
-    print(num_fields, field_names, 'workflow' in field_names)
-
-    if 'workflow' not in field_names:
-        sql_folder = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sql_patch"))
-        experimenttype_alter = os.path.join(sql_folder, "biowardrobe_alter_table", "experimenttype_patch.sql")
-
-        for _sql in split(open(experimenttype_alter).read()):
-            if not _sql:
-                continue
-            _settings.cursor.execute(_sql)
-            _settings.conn.commit()
-
     _settings.cursor.execute("select etype, workflow from experimenttype")
     for (etype, workflow) in _settings.cursor.fetchall():
         if not workflow:

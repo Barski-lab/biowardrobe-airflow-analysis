@@ -19,8 +19,10 @@
  limitations under the License.
  ****************************************************************************"""
 
-import decimal
+from functools import lru_cache
 
+
+@lru_cache(maxsize=128)
 def biowardrobe_settings(cursor):
     cursor.execute("select * from settings")
     return {row['key']: row['value'] for row in cursor.fetchall()}
@@ -48,3 +50,13 @@ def recursive_check(item, monitor):
         dict((k, v) for k, v in item.items() if recursive_check(v, monitor))
     elif isinstance(item, list):
         list(v for v in item if recursive_check(v, monitor))
+
+
+def update_status(uid, message, code, conn, cursor, optional_column="", optional_where=""):
+    """Update libstatus for current uid"""
+    optional_column = optional_column if optional_column.startswith(',') else ',' + optional_column
+    message = str(message).replace("'", '"')
+    cursor.execute(f"""update labdata set libstatustxt='{message}', 
+    libstatus={code} {optional_column} where uid='{uid}' 
+    {optional_where}""")
+    conn.commit()

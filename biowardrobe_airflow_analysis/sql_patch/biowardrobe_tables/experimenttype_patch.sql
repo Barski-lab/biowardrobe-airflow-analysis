@@ -39,7 +39,7 @@ WHERE etype='RNA-Seq dUTP';
 insert into `ems`.`experimenttype` SELECT NULL, 'RNA-Seq dUTP Mitochondrial', '', ''
 where (SELECT id FROM `ems`.`experimenttype` WHERE etype='RNA-Seq dUTP Mitochondrial') is NULL;
 
-# RNA-Seq single dUTP mitochnodrial
+# RNA-Seq single dUTP Mitochondrial
 UPDATE `ems`.`experimenttype` SET
   workflow='rnaseq-se-dutp-mitochondrial.cwl',
   template='{{

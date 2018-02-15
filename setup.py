@@ -57,7 +57,7 @@ tagger = EggInfoFromGit
 
 setup(
     name='biowardrobe-airflow-analysis',
-    description='Python package to extend BioWardrobe functionality with CWL Airflow',
+    description="Replaces BioWardrobe's backend with CWL Airflow",
     long_description=open(README).read(),
     version='1.0',
     url='https://github.com/datirium/biowardrobe-airflow-analysis',
@@ -72,6 +72,7 @@ setup(
         'jsonmerge',
         'ruamel.yaml < 0.15',
         'biowardrobe-cwl-workflows',
+        'cwl-airflow-parser',
         'apache-airflow >= 1.9.0, < 2'
     ],
     zip_safe=False,
@@ -84,8 +85,8 @@ setup(
     package_data={
         '': ['*.sh'],
         'biowardrobe_airflow_analysis': [
-            'sql_patch/biowardrobe_alter_table/*.sql',
-            'sql_patch/biowardrobe_patched_view/*.sql',
+            'sql_patch/biowardrobe_tables/*.sql',
+            'sql_patch/biowardrobe_views/*.sql',
             'system/macosx/*.plist',
             'system/ubuntu/*.service'
         ]
