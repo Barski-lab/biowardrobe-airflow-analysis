@@ -36,8 +36,7 @@ UPDATE `ems`.`experimenttype` SET
   }}'
 WHERE etype='RNA-Seq dUTP';
 
-insert into `ems`.`experimenttype` SELECT NULL, 'RNA-Seq dUTP Mitochondrial', '', ''
-where (SELECT id FROM `ems`.`experimenttype` WHERE etype='RNA-Seq dUTP Mitochondrial') is NULL;
+insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'RNA-Seq dUTP Mitochondrial', '', '';
 
 # RNA-Seq single dUTP Mitochondrial
 UPDATE `ems`.`experimenttype` SET
