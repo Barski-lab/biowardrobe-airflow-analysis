@@ -28,7 +28,7 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
     _settings = biowardrobe_settings(cursor)
 
     _sql = f"""select e.etype, e.workflow, e.template, l.uid, g.db, g.findex, g.annotation, g.annottable,
-        g.genome, l.forcerun, l.url, COALESCE(l.params,'{{}}') as params,
+        g.genome, l.forcerun, l.url, l.params,
         COALESCE(l.trim5,0) as clip_5p_end, COALESCE(l.trim3,0) as clip_3p_end,
         COALESCE(fragmentsizeexp,0) as exp_fragment_size, COALESCE(fragmentsizeforceuse,0) as force_fragment_size,
         g.gsize as genome_size,
@@ -60,7 +60,7 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         "force_fragment_size": (int(row['force_fragment_size']) == 1),
         "broad_peak": (int(row['broad_peak']) == 2),
         "remove_duplicates": (int(row['remove_duplicates']) == 1),
-
+        "params": row['params'] if row['params'] else '{}',
         "raw_data": norm_path("/".join((_settings['wardrobe'], _settings['preliminary']))),
         "upload": norm_path("/".join((_settings['wardrobe'], _settings['upload']))),
         "indices": norm_path("/".join((_settings['wardrobe'], _settings['indices']))),
