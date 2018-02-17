@@ -10,6 +10,8 @@ from airflow.utils import apply_defaults
 from cwltool.process import relocateOutputs
 from cwltool.stdfsaccess import StdFsAccess
 
+from cwl_airflow_parser.cwlstepoperator import CWLStepOperator
+
 _logger = logging.getLogger(__name__)
 
 
@@ -49,7 +51,7 @@ class CWLJobFinalize(BaseOperator):
         self.reader_task_id = reader_task_id if reader_task_id else self.reader_task_id
 
     def execute(self, context):
-        upstream_task_ids = [t.task_id for t in self.upstream_list] + \
+        upstream_task_ids = [t.task_id for t in self.dag.tasks if isinstance(t, CWLStepOperator)] + \
                             ([self.reader_task_id] if self.reader_task_id else [])
         upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
 
@@ -71,8 +73,17 @@ class CWLJobFinalize(BaseOperator):
                      format(self.task_id,
                             dumps(promises, indent=4),
                             dumps(self.outputs, indent=4)))
+        #  TODO: check what happens with original input should we update file info {basename:...} ?
+        _move_job = {out: promises[out]
+                     for out, val in self.outputs.items()
+                     }
+        _logger.debug('{0}: Final job: \n{1}\nMoving data: \n{2}\nMoving job:{3}'.
+                      format(self.task_id,
+                             dumps(promises, indent=4),
+                             dumps(self.outputs, indent=4),
+                             dumps(_move_job, indent=4)))
 
-        _files_moved = relocateOutputs(promises, self.output_folder, [self.outdir], "move", StdFsAccess(""))
+        _files_moved = relocateOutputs(_move_job, self.output_folder, [self.outdir], "move", StdFsAccess(""))
         _job_result = {val.split("/")[-1]: _files_moved[out]  # TODO: is split required?
                        for out, val in self.outputs.items()
                        if out in _files_moved
@@ -85,4 +96,5 @@ class CWLJobFinalize(BaseOperator):
             _logger.error("{0}: Temporary output directory hasn't been set {1}".format(self.task_id, e))
             pass
         _logger.info("Job done: {}".format(dumps(_job_result, indent=4)))
+
         return _job_result
