@@ -28,7 +28,7 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
     _settings = biowardrobe_settings(cursor)
 
     _sql = f"""select e.etype, e.workflow, e.template, l.uid, g.db, g.findex, g.annotation, g.annottable,
-        g.genome, l.forcerun, l.url, l.params,
+        g.genome, l.forcerun, l.url, l.params, l.deleted,
         COALESCE(l.trim5,0) as clip_5p_end, COALESCE(l.trim3,0) as clip_3p_end,
         COALESCE(fragmentsizeexp,0) as exp_fragment_size, COALESCE(fragmentsizeforceuse,0) as force_fragment_size,
         g.gsize as genome_size,
@@ -64,8 +64,9 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         "raw_data": norm_path("/".join((_settings['wardrobe'], _settings['preliminary']))),
         "upload": norm_path("/".join((_settings['wardrobe'], _settings['upload']))),
         "indices": norm_path("/".join((_settings['wardrobe'], _settings['indices']))),
-        "threads": _settings['maxthreads']}
-    )
+        "threads": _settings['maxthreads'],
+        "experimentsdb": _settings['experimentsdb']
+    })
     kwargs.update({
         "fastq_file_upstream": norm_path("/".join((kwargs["raw_data"], kwargs["uid"], kwargs["uid"] + '.fastq'))),
         "fastq_file_downstream": norm_path("/".join((kwargs["raw_data"], kwargs["uid"], kwargs["uid"] + '_2.fastq'))),

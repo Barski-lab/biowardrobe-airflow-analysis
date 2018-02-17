@@ -23,6 +23,9 @@
 import os
 from sqlparse import split
 
+from airflow.utils.db import merge_conn
+from airflow import models
+
 from .biowardrobe import Settings
 
 sql_folder = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sql_patch"))
@@ -36,8 +39,12 @@ def apply_sql_patch(file):
     for _sql in split(open(experimenttype_alter).read()):
         if not _sql:
             continue
-        _settings.cursor.execute(_sql)
-        _settings.conn.commit()
+        try:
+            _settings.cursor.execute(_sql)
+            _settings.conn.commit()
+        except:
+            pass
+
 
 def generate_biowardrobe_workflow():
 
@@ -53,14 +60,13 @@ from airflow import DAG
 from biowardrobe_airflow_analysis.biowardrobe_workflows import create_biowardrobe_workflow
 dag = create_biowardrobe_workflow("{}")
 """
-    _settings.cursor.execute("select etype, workflow from experimenttype")
-    for (etype, workflow) in _settings.cursor.fetchall():
+    _settings.cursor.execute("select workflow from experimenttype")
+    for (workflow,) in _settings.cursor.fetchall():
         if not workflow:
             continue
         _filename = os.path.abspath(os.path.basename(os.path.splitext(workflow)[0])+'.py')
-        _data = _template.format(workflow)
         with open(_filename, 'w') as generated_workflow_stream:
-            generated_workflow_stream.write(_data)
+            generated_workflow_stream.write(_template.format(workflow))
 
     _template = u"""#!/usr/bin/env python3
 from airflow import DAG
@@ -70,3 +76,18 @@ dt= dag_t
 """
     with open('biowardrobe_download.py', 'w') as generated_workflow_stream:
         generated_workflow_stream.write(_template)
+
+    _template = u"""#!/usr/bin/env python3
+from airflow import DAG
+from biowardrobe_airflow_analysis.biowardrobe.force_run import dag
+d = dag
+"""
+    with open('biowardrobe_force_run.py', 'w') as generated_workflow_stream:
+        generated_workflow_stream.write(_template)
+
+    merge_conn(
+        models.Connection(
+            conn_id='biowardrobe', conn_type='mysql',
+            host=_settings.config[0], login=_settings.config[1],
+            password=_settings.config[2], schema=_settings.config[3],
+            extra="{\"cursor\":\"dictcursor\"}"))

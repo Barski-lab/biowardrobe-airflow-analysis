@@ -11,14 +11,14 @@ import uuid
 import os
 
 import airflow
-from airflow.models import DAG
+from airflow.models import DAG, Variable
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.models import Variable
 from airflow.exceptions import AirflowException, AirflowSensorTimeout, AirflowSkipException
+from airflow.contrib.auth.backends.password_auth import PasswordUser
 
 from .analysis import get_biowardrobe_data
 from .constants import biowardrobe_connection_id
@@ -98,7 +98,7 @@ args = {
     'retries': 1000,
     'retry_exponential_backoff': True,
     'retry_delay': timedelta(minutes=10),
-    'max_retry_delay': timedelta(minutes=60*24)
+    'max_retry_delay': timedelta(minutes=60*4)
 }
 
 #
