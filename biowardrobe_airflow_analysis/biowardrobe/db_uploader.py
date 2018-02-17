@@ -274,7 +274,7 @@ def upload_folder_size(self, uid, filename):
         for f in files:
             fp = os.path.join(root, f)
             total_size += os.path.getsize(fp)
-    self.cursor.execute("update labdata set size = %s where uid=%s", (int(total_size)/1024.0,uid))
+    self.cursor.execute("update labdata set size = %s where uid=%s", (int(total_size)/1024.0, uid))
     self.conn.commit()
 
 

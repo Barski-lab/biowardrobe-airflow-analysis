@@ -33,6 +33,32 @@ CHR_LENGTH_GENERIC_TSV = "chrNameLength.txt"
 ANNOTATION_GENERIC_TSV = "refgene.tsv"
 
 
+BIOWARDROBE_UPLOAD_FUNCTIONS = {
+    "upload_macs2_fragment_stat": upload_macs2_fragment_stat,
+    "upload_iaintersect_result": upload_iaintersect_result,
+    "upload_get_stat": upload_get_stat,
+    "upload_atdp": upload_atdp,
+    "upload_bigwig": upload_bigwig,
+    "upload_bigwig_upstream": upload_bigwig_upstream,
+    "upload_bigwig_downstream": upload_bigwig_downstream,
+    "upload_rpkm": upload_rpkm,
+    "upload_folder_size": upload_folder_size,
+    "delete_files": delete_files
+}
+
+BIOWARDROBE_UPLOAD_TEMPLATES = {
+    "upload_macs2_fragment_stat": '{}_fragment_stat.tsv',
+    "upload_iaintersect_result": '{}_macs_peaks_iaintersect.tsv',
+    "upload_get_stat": '{}.stat',
+    "upload_atdp": '{}_atdp.tsv',
+    "upload_bigwig": '{}.bigWig',
+    "upload_bigwig_upstream": '{}_upstream.bigWig',
+    "upload_bigwig_downstream": '{}_downstream.bigWig',
+    "upload_rpkm": '{}.isoforms.csv',
+    "upload_folder_size": 'upload_folder_size',
+    "delete_files": '{}*.fastq'
+}
+
 # For both paired-end and single end
 CHIP_SEQ_UPLOAD = {
     '{}_fragment_stat.tsv': upload_macs2_fragment_stat,
