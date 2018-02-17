@@ -8,7 +8,6 @@ from json import dumps, loads
 from collections import OrderedDict
 import logging
 import decimal
-from functools import lru_cache
 
 from .utils import biowardrobe_settings, remove_not_set_inputs
 from .constants import (STAR_INDICES,
@@ -22,7 +21,6 @@ from .constants import (STAR_INDICES,
 _logger = logging.getLogger(__name__)
 
 
-@lru_cache(maxsize=128)
 def get_biowardrobe_data(cursor, biowardrobe_uid):
     """Generate and export job file to a specific folder"""
     _settings = biowardrobe_settings(cursor)
@@ -37,9 +35,8 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         from labdata l
         inner join (experimenttype e,genome g ) ON (e.id=experimenttype_id and g.id=genome_id)
         LEFT JOIN (antibody a) ON (l.antibody_id=a.id)
-        where COALESCE(egroup_id,'') <> '' and COALESCE(name4browser,'') <> '' and deleted=0
-        and l.uid='{biowardrobe_uid}'
-        order by dateadd"""
+        where COALESCE(egroup_id,'') <> '' and COALESCE(name4browser,'') <> ''
+        and l.uid='{biowardrobe_uid}' """
 
     _logger.debug(f"SQL: {_sql}")
 

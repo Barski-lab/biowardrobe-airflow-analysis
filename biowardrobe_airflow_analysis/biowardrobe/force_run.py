@@ -22,6 +22,11 @@ from airflow.exceptions import AirflowSkipException
 from .analysis import get_biowardrobe_data
 from .constants import biowardrobe_connection_id
 
+from warnings import filterwarnings
+from MySQLdb import Warning
+
+filterwarnings('ignore', category=Warning)
+
 
 _logger = logging.getLogger(__name__)
 
@@ -67,7 +72,7 @@ class BioWardrobeForceRun(BaseOperator):
                                   where ((forcerun=1 AND libstatus >11 AND deleted=0) OR deleted=1) """)
                 return cursor.fetchall()
 
-    def get_biowardrobe_data(self, biowardrobe_uid):
+    def get_record_data(self, biowardrobe_uid):
         mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
         with closing(mysql.get_conn()) as conn:
             with closing(conn.cursor()) as cursor:
@@ -76,13 +81,13 @@ class BioWardrobeForceRun(BaseOperator):
     def execute(self, context):
 
         started_at = datetime.utcnow()
-        while True:
+        _keep_going = True
+        while _keep_going:
 
             _force_run_data = self.get_force_run_data()
-
             _logger.info("Force run data: {}".format(_force_run_data))
 
-            if _force_run_data and len(_force_run_data) == 0:
+            if not _force_run_data:
                 if (datetime.utcnow() - started_at).total_seconds() > self.timeout:
                     raise AirflowSkipException('Snap. Time is OUT.')
                 sleep(self.poke_interval)
@@ -90,12 +95,12 @@ class BioWardrobeForceRun(BaseOperator):
 
             for row in _force_run_data:
                 _logger.info("Trigger force run with: {}".format(row))
-
+                _keep_going = False
                 biowardrobe_uid = row['uid']
                 #  TODO: Check if dag is running in airflow
 
                 #  TODO: If not running!
-                data = self.get_biowardrobe_data(biowardrobe_uid)
+                data = self.get_record_data(biowardrobe_uid)
                 #
                 #  Actual Force RUN
                 basedir = data['output_folder']
@@ -119,8 +124,10 @@ class BioWardrobeForceRun(BaseOperator):
                         _logger.error("Can't uncompress: {} {}".format(cmd, str(e)))
 
                     if not os.path.isfile(biowardrobe_uid + '.fastq'):
+                        _logger.error("File does not exist: {}".format(biowardrobe_uid))
                         continue
                     if not os.path.isfile(biowardrobe_uid + '_2.fastq') and data['pair']:
+                        _logger.error("File 2 does not exist: {}".format(biowardrobe_uid))
                         continue
                 else:
                     rmtree(basedir, True)
@@ -134,12 +141,13 @@ class BioWardrobeForceRun(BaseOperator):
                                 "update labdata set libstatustxt=%s, libstatus=10, forcerun=0, tagstotal=0,"
                                 "tagsmapped=0,tagsribo=0,tagsused=0,tagssuppressed=0 where uid=%s",
                                 ("Ready to be reanalyzed", biowardrobe_uid))
+                            conn.commit()
                         else:
                             cursor.execute(
                                 "update labdata set libstatustxt=%s,deleted=2,datedel=CURDATE() where uid=%s",
                                 ("Deleted", biowardrobe_uid))
-
-                        conn.commit()
+                            conn.commit()
+                            continue
 
                 _dag_id = os.path.basename(os.path.splitext(data['workflow'])[0])
                 _run_id = 'forcerun__{}__{}'.format(biowardrobe_uid, uuid.uuid4())
@@ -177,7 +185,7 @@ dag = DAG(
         'max_retry_delay': timedelta(minutes=60*4)
     },
     schedule_interval='*/10 * * * *',
-    catchup=False,
+    catchup=True,
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=60*24*8)
 )
