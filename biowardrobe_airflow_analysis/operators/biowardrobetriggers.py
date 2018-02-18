@@ -1,6 +1,8 @@
+
 import logging
 from contextlib import closing
 from datetime import timedelta, datetime
+from time import sleep
 import os
 import uuid
 
@@ -48,37 +50,57 @@ class BioWardrobeTriggerDownloadOperator(BaseOperator):
     def __init__(
             self,
             trigger_dag_id,
+            poke_interval=60 * 5,
+            timeout=60 * 60 * 24 * 7,
             *args, **kwargs):
         super(BioWardrobeTriggerDownloadOperator, self).__init__(*args, **kwargs)
         self.trigger_dag_id = trigger_dag_id
+        self.poke_interval = poke_interval
+        self.timeout = timeout
 
     def execute(self, context):
-        mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
 
-        with closing(mysql.get_conn()) as conn:
-            with closing(conn.cursor()) as cursor:
-                cursor.execute("""select id, uid from ems.labdata
-                                  where libstatus = 0 and deleted=0 and url is not NULL and url <> "" """)
-                session = settings.Session()
-                for row in cursor.fetchall():
-                    _logger.info("Trigger download with: {}".format(row))
-                    _run_id = 'trig__{}__{}'.format(row['uid'], uuid.uuid4())
+        started_at = datetime.utcnow()
 
-                    dr = DagRun(
-                        dag_id=self.trigger_dag_id,
-                        run_id=_run_id,
-                        conf={'biowardrobe_uid': row['uid'], 'run_id': _run_id},
-                        execution_date=datetime.now(),
-                        start_date=datetime.now(),
-                        external_trigger=True)
-                    logging.info("Creating DagRun {}".format(dr))
-                    session.add(dr)
-                    session.commit()
+        _keep_going = True
+        while _keep_going:
 
-                    cursor.execute("update ems.labdata set libstatus=1, deleted=0 where uid=%s ", (row['uid'],))
-                    conn.commit()
+            mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
+            with closing(mysql.get_conn()) as conn:
+                with closing(conn.cursor()) as cursor:
+                    cursor.execute("""select id, uid from ems.labdata
+                                      where libstatus = 0 and deleted=0 and url is not NULL and url <> "" """)
+                    _download_data = cursor.fetchall()
 
-                session.close()
+            if not _download_data:
+                if (datetime.utcnow() - started_at).total_seconds() > self.timeout:
+                    raise AirflowSkipException('Snap. Time is OUT.')
+                sleep(self.poke_interval)
+                continue
+
+            _keep_going = False
+            with closing(mysql.get_conn()) as conn:
+                with closing(conn.cursor()) as cursor:
+                    session = settings.Session()
+                    for row in _download_data:
+                        _logger.info("Trigger download with: {}".format(row))
+                        _run_id = 'trig__{}__{}'.format(row['uid'], uuid.uuid4())
+
+                        dr = DagRun(
+                            dag_id=self.trigger_dag_id,
+                            run_id=_run_id,
+                            conf={'biowardrobe_uid': row['uid'], 'run_id': _run_id},
+                            execution_date=datetime.now(),
+                            start_date=datetime.now(),
+                            external_trigger=True)
+                        logging.info("Creating DagRun {}".format(dr))
+                        session.add(dr)
+                        session.commit()
+
+                        cursor.execute("update ems.labdata set libstatus=1, deleted=0 where uid=%s ", (row['uid'],))
+                        conn.commit()
+
+                    session.close()
 
 
 class BioWardrobeTriggerBasicAnalysisOperator(BaseOperator):
