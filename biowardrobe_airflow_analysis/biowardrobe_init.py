@@ -21,6 +21,7 @@
 
 
 import os
+from sys import platform
 from shutil import copyfile
 from sqlparse import split
 
@@ -44,15 +45,18 @@ _settings = Settings.Settings()
 
 
 def apply_sql_patch(file):
-    experimenttype_alter = os.path.join(sql_folder, "biowardrobe_tables", file)
-    for _sql in split(open(experimenttype_alter).read()):
-        if not _sql:
-            continue
-        try:
-            _settings.cursor.execute(_sql)
-            _settings.conn.commit()
-        except:
-            pass
+    file_abs_path = os.path.join(sql_folder, "biowardrobe_tables", file)
+    print(file_abs_path)
+    with open(file_abs_path) as ef:
+        for _sql in split(ef.read()):
+            if not _sql:
+                continue
+            try:
+                _settings.cursor.execute(_sql)
+                _settings.conn.commit()
+            except Exception as e:
+                print("Error: {}".format(e))
+                pass
 
 
 def generate_biowardrobe_workflow():
@@ -133,3 +137,22 @@ d = dag
             conf.set('scheduler', 'scheduler_heartbeat_sec', '20')
             conf.set('scheduler', 'min_file_process_interval', '30')
             conf.conf.write(fp)
+
+    startup_scripts = ['com.datirium.airflow-scheduler.plist', 'com.datirium.airflow-webserver.plist']
+    if platform == "darwin":
+        _sys_dir = os.path.expanduser('~/Library/LaunchAgents')
+        for scripts in startup_scripts:
+            with open(os.path.join(system_folder, 'macosx', scripts), 'r') as s:
+                data = s.read()
+                # OS X
+            dst = os.path.join(_sys_dir, scripts)
+            if os.path.exists(dst) and not os.path.exists(dst+".orig"):
+                copyfile(dst, dst+".orig")
+
+            with open(dst, 'w') as w:
+                w.write(data.format(AIRFLOW_HOME=AIRFLOW_HOME))
+
+    # if platform == "linux" or platform == "linux2":
+    # linux
+    # elif platform == "win32":
+    # Windows...
