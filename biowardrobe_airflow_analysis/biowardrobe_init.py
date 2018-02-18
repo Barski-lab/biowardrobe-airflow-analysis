@@ -64,11 +64,10 @@ def generate_biowardrobe_workflow():
     _settings.cursor.execute("select * from experimenttype limit 1")
 
     field_names = [i[0] for i in _settings.cursor.description]
-    if 'workflow' in field_names:
-        apply_sql_patch("experimenttype_drop.sql")
+    if 'workflow' not in field_names:
+        apply_sql_patch("labdata_alter.sql")
+        apply_sql_patch("experimenttype_alter.sql")
 
-    apply_sql_patch("labdata_alter.sql")
-    apply_sql_patch("experimenttype_alter.sql")
     apply_sql_patch("experimenttype_patch.sql")
 
     _template = u"""#!/usr/bin/env python3
@@ -156,3 +155,5 @@ d = dag
     # linux
     # elif platform == "win32":
     # Windows...
+
+    # TODO: tmp, dags do not exist ???
