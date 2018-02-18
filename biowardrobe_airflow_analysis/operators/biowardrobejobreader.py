@@ -18,7 +18,7 @@ from ..biowardrobe.analysis import get_biowardrobe_data
 from ..biowardrobe.utils import update_status
 from ..biowardrobe.constants import biowardrobe_connection_id
 
-from cwltool.main import jobloaderctx, shortname
+from cwltool.main import jobloaderctx, shortname, init_job_order
 from cwltool.pathmapper import adjustDirObjs, visit_class, trim_listing
 from cwltool.process import normalizeFilesDirs
 
@@ -43,12 +43,12 @@ class BioWardrobeJobReader(BaseOperator):
         self.tmp_folder = tmp_folder if tmp_folder else self.dag.default_args['tmp_folder']
         if ui_color: self.ui_color = ui_color
 
-    def add_defaults(self, job_order_object):
-        for inp in self.dag.cwlwf.tool["inputs"]:
-            if "default" in inp and (not job_order_object or shortname(inp["id"]) not in job_order_object):
-                if not job_order_object:
-                    job_order_object = {}
-                job_order_object[shortname(inp["id"])] = inp["default"]
+    # def add_defaults(self, job_order_object):
+    #     for inp in self.dag.cwlwf.tool["inputs"]:
+    #         if "default" in inp and (not job_order_object or shortname(inp["id"]) not in job_order_object):
+    #             if not job_order_object:
+    #                 job_order_object = {}
+    #             job_order_object[shortname(inp["id"])] = inp["default"]
 
     def execute(self, context):
         try:
@@ -98,24 +98,26 @@ class BioWardrobeJobReader(BaseOperator):
             except Exception as e:
                 _logger.error("Job Loader: {}".format(str(e)))
 
-            self.add_defaults(job_order_object)
+            # self.add_defaults(job_order_object)
 
-            if "cwl:tool" in job_order_object:
-                del job_order_object["cwl:tool"]
-            if "id" in job_order_object:
-                del job_order_object["id"]
+            job_order_object = init_job_order(job_order_object, None, self.dag.cwlwf)
 
-            adjustDirObjs(job_order_object, trim_listing)
-            normalizeFilesDirs(job_order_object)
+            # if "cwl:tool" in job_order_object:
+            #     del job_order_object["cwl:tool"]
+            # if "id" in job_order_object:
+            #     del job_order_object["id"]
+            #
+            # adjustDirObjs(job_order_object, trim_listing)
+            # normalizeFilesDirs(job_order_object)
 
             logging.info('{0}: Job object after adjustment and normalization: \n{1}'.
                          format(self.task_id, dumps(job_order_object, indent=4)))
 
-            fragment = urlsplit(self.dag.default_args["cwl_workflow"]).fragment
-            fragment = fragment + '/' if fragment else ''
-            job_order_object_extended = {fragment + key: value for key, value in job_order_object.iteritems()}
+            # fragment = urlsplit(self.dag.default_args["workflow"]).fragment
+            # fragment = fragment + '/' if fragment else ''
+            # job_order_object_extended = {fragment + key: value for key, value in job_order_object.items()}
 
-            cwl_context['promises'] = job_order_object_extended
+            cwl_context['promises'] = job_order_object
 
             logging.info(
                 '{0}: Final job: \n {1}'.format(self.task_id, dumps(cwl_context, indent=4)))
