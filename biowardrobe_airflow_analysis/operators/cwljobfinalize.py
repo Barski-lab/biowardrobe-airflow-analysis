@@ -15,21 +15,6 @@ from cwl_airflow_parser.cwlstepoperator import CWLStepOperator
 _logger = logging.getLogger(__name__)
 
 
-def set_permissions(item, dir_perm=0o0777, file_perm=0o0666, grp_own=os.getgid(), user_own=-1):
-    os.chown(item, user_own, grp_own)
-    if os.path.isfile(item):
-        os.chmod(item, file_perm)
-    else:
-        os.chmod(item, dir_perm)
-        for root, dirs, files in os.walk(item):
-            for file in files:
-                os.chmod(os.path.join(root, file), file_perm)
-                os.chown(os.path.join(root, file), user_own, grp_own)
-            for _dir in dirs:
-                os.chmod(os.path.join(root, _dir), dir_perm)
-                os.chown(os.path.join(root, _dir), user_own, grp_own)
-
-
 class CWLJobFinalize(BaseOperator):
 
     ui_color = '#1E88E5'
@@ -50,7 +35,7 @@ class CWLJobFinalize(BaseOperator):
         self.reader_task_id = None
         self.reader_task_id = reader_task_id if reader_task_id else self.reader_task_id
 
-    def execute(self, context):
+    def cwl_finalize(self, context):
         upstream_task_ids = [t.task_id for t in self.dag.tasks if isinstance(t, CWLStepOperator)] + \
                             ([self.reader_task_id] if self.reader_task_id else [])
         upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
@@ -69,11 +54,6 @@ class CWLJobFinalize(BaseOperator):
         else:
             return
 
-        _logger.info('{0}: Final job: \n{1}\nMoving data: \n{2}'.
-                     format(self.task_id,
-                            dumps(promises, indent=4),
-                            dumps(self.outputs, indent=4)))
-        #  TODO: check what happens with original input should we update file info {basename:...} ?
         _move_job = {out: promises[out]
                      for out, val in self.outputs.items()
                      }
@@ -98,3 +78,6 @@ class CWLJobFinalize(BaseOperator):
         _logger.info("Job done: {}".format(dumps(_job_result, indent=4)))
 
         return _job_result
+
+    def execute(self, context):
+        return self.cwl_finalize(context)

@@ -21,7 +21,6 @@ from ..biowardrobe.db_uploader import upload_results_to_db
 from ..biowardrobe.biow_exceptions import BiowBasicException
 
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -79,7 +78,6 @@ class BioWardrobeJobDone(BaseOperator):
         else:
             return
 
-        #  TODO: check what happens with original input should we update file info {basename:...} ?
         _move_job = {out: promises[out]
                      for out, val in self.outputs.items()
                      }
