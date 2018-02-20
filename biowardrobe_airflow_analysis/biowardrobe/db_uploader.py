@@ -30,7 +30,7 @@ def upload_results_to_db(upload_set, uid, output_folder, conn, cursor):
 
 def upload_results_to_db2(upload_rules, uid, output_folder, conn, cursor):
     """Call execute function for all created BaseUploader"""
-    for value in upload_rules.items():
+    for value in upload_rules:
         try:
             BaseUploader(conn, cursor, BIOWARDROBE_UPLOAD_FUNCTIONS[value])\
                 .execute(uid, os.path.join(output_folder, BIOWARDROBE_UPLOAD_TEMPLATES[value].format(uid)))
