@@ -16,7 +16,7 @@ from cwltool.main import jobloaderctx, init_job_order
 _logger = logging.getLogger(__name__)
 
 
-class CWLJobReader(BaseOperator):
+class CWLJobDispatcher(BaseOperator):
 
     ui_color = '#1E88E5'
     ui_fgcolor = '#FFF'
@@ -29,12 +29,12 @@ class CWLJobReader(BaseOperator):
             tmp_folder=None,
             *args, **kwargs):
         task_id = task_id if task_id else self.__class__.__name__
-        super(CWLJobReader, self).__init__(task_id=task_id, *args, **kwargs)
+        super(CWLJobDispatcher, self).__init__(task_id=task_id, *args, **kwargs)
 
         self.tmp_folder = tmp_folder if tmp_folder else self.dag.default_args['tmp_folder']
         if ui_color: self.ui_color = ui_color
 
-    def cwl_begin(self, json):
+    def cwl_dispatch(self, json):
         try:
             cwl_context = {
                 "outdir": mkdtemp(

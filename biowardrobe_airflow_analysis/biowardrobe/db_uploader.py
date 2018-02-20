@@ -28,6 +28,16 @@ def upload_results_to_db(upload_set, uid, output_folder, conn, cursor):
             raise BiowUploadException(uid, message="Failed to upload {}  : {}".format(key.format(uid), str(ex)))
 
 
+def upload_results_to_db2(upload_rules, uid, output_folder, conn, cursor):
+    """Call execute function for all created BaseUploader"""
+    for value in upload_rules.items():
+        try:
+            BaseUploader(conn, cursor, BIOWARDROBE_UPLOAD_FUNCTIONS[value])\
+                .execute(uid, os.path.join(output_folder, BIOWARDROBE_UPLOAD_TEMPLATES[value].format(uid)))
+        except Exception as ex:
+            raise BiowUploadException(uid, message="Failed to upload {} : {} : {}".format(value, uid, str(ex)))
+
+
 def upload_macs2_fragment_stat(self, uid, filename):
     with open(filename, 'r') as input_file:
         data = input_file.read().strip().split()
@@ -282,3 +292,29 @@ def delete_files(self, uid, filename):
     for item_file in glob.glob(filename):
         os.remove(item_file)
 
+
+BIOWARDROBE_UPLOAD_FUNCTIONS = {
+    "upload_macs2_fragment_stat": upload_macs2_fragment_stat,
+    "upload_iaintersect_result": upload_iaintersect_result,
+    "upload_get_stat": upload_get_stat,
+    "upload_atdp": upload_atdp,
+    "upload_bigwig": upload_bigwig,
+    "upload_bigwig_upstream": upload_bigwig_upstream,
+    "upload_bigwig_downstream": upload_bigwig_downstream,
+    "upload_rpkm": upload_rpkm,
+    "upload_folder_size": upload_folder_size,
+    "delete_files": delete_files
+}
+
+BIOWARDROBE_UPLOAD_TEMPLATES = {
+    "upload_macs2_fragment_stat": '{}_fragment_stat.tsv',
+    "upload_iaintersect_result": '{}_macs_peaks_iaintersect.tsv',
+    "upload_get_stat": '{}.stat',
+    "upload_atdp": '{}_atdp.tsv',
+    "upload_bigwig": '{}.bigWig',
+    "upload_bigwig_upstream": '{}_upstream.bigWig',
+    "upload_bigwig_downstream": '{}_downstream.bigWig',
+    "upload_rpkm": '{}.isoforms.csv',
+    "upload_folder_size": 'upload_folder_size',
+    "delete_files": '{}*.fastq'
+}

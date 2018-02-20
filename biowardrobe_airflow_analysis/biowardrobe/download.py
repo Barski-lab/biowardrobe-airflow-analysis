@@ -13,12 +13,11 @@ import os
 import airflow
 from airflow.models import DAG, Variable
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
+from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.exceptions import AirflowException, AirflowSensorTimeout, AirflowSkipException
-from airflow.contrib.auth.backends.password_auth import PasswordUser
+from airflow.utils.dates import days_ago
 
 from .analysis import get_biowardrobe_data
 from .constants import biowardrobe_connection_id
@@ -84,6 +83,9 @@ cd "${DIR}" || exit 1
 """+f"""
 
 PROXY="{PROXY}"
+
+http_proxy="${{PROXY}}"
+https_proxy="${{PROXY}}"
 
 """
 
@@ -326,18 +328,22 @@ error_finish_operator.set_upstream([cli_download_sra, url_download, download_loc
 dag_t = DAG(
     dag_id='biowardrobe_download_trigger',
     default_args={
-        "owner": "airflow",
-        "start_date": airflow.utils.dates.days_ago(1),
+        'owner': 'airflow',
+        'start_date': days_ago(1),
         'depends_on_past': False,
         'email': ['biowardrobe@biowardrobe.com'],
         'email_on_failure': False,
-        'email_on_retry': False
+        'email_on_retry': False,
+        'retries': 20,
+        'retry_exponential_backoff': True,
+        'retry_delay': timedelta(minutes=10),
+        'max_retry_delay': timedelta(minutes=60 * 4)
     },
     schedule_interval='*/10 * * * *',
-    catchup=False,
-    max_active_runs=1,
-    dagrun_timeout=timedelta(minutes=60*24)
+    catchup=True,
+    max_active_runs=1
 )
+#  dagrun_timeout=timedelta(minutes=60 * 24 * 8)
 
 
 trigger = BioWardrobeTriggerDownloadOperator(task_id='trigger',

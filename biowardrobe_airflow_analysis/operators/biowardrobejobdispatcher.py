@@ -5,12 +5,6 @@ from tempfile import mkdtemp
 from json import dumps
 from contextlib import closing
 
-import schema_salad.schema
-from schema_salad.ref_resolver import Loader, file_uri
-import ruamel.yaml as yaml
-from urllib.parse import urlsplit
-
-from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from airflow.hooks.mysql_hook import MySqlHook
 
@@ -18,12 +12,12 @@ from ..biowardrobe.analysis import get_biowardrobe_data
 from ..biowardrobe.utils import update_status
 from ..biowardrobe.constants import biowardrobe_connection_id
 
-from cwltool.main import jobloaderctx, init_job_order
+from cwl_airflow_parser import CWLJobDispatcher
 
 _logger = logging.getLogger(__name__)
 
 
-class BioWardrobeJobReader(BaseOperator):
+class BioWardrobeJobDispatcher(CWLJobDispatcher):
 
     ui_color = '#1E88E5'
     ui_fgcolor = '#FFF'
@@ -36,17 +30,13 @@ class BioWardrobeJobReader(BaseOperator):
             tmp_folder=None,
             *args, **kwargs):
         task_id = task_id if task_id else self.__class__.__name__
-        super(BioWardrobeJobReader, self).__init__(task_id=task_id, *args, **kwargs)
+        super(BioWardrobeJobDispatcher, self).__init__(task_id=task_id, *args, **kwargs)
 
         self.tmp_folder = tmp_folder if tmp_folder else self.dag.default_args['tmp_folder']
         if ui_color: self.ui_color = ui_color
 
     def execute(self, context):
         try:
-            cwl_context = {
-                "outdir": mkdtemp(
-                    prefix=os.path.abspath(os.path.join(self.tmp_folder, 'dag_tmp_')))
-            }
             _json = {}
             _data = {}
 
@@ -77,30 +67,11 @@ class BioWardrobeJobReader(BaseOperator):
                                   optional_column="dateanalyzed=now()",
                                   optional_where="and dateanalyzed is null")
 
-            _jobloaderctx = jobloaderctx.copy()
-            _jobloaderctx.update(self.dag.cwlwf.metadata.get("$namespaces", {}))
-            loader = Loader(_jobloaderctx)
-
-            try:
-                job_order_object = yaml.round_trip_load(io.StringIO(initial_value=dumps(_json)))
-                job_order_object, _ = loader.resolve_all(job_order_object,
-                                                         file_uri(os.getcwd()) + "/",
-                                                         checklinks=False)
-            except Exception as e:
-                _logger.error("Job Loader: {}".format(str(e)))
-
-            job_order_object = init_job_order(job_order_object, None, self.dag.cwlwf)
+            return self.cwl_dispatch(_json)
 
             # fragment = urlsplit(self.dag.default_args["workflow"]).fragment
             # fragment = fragment + '/' if fragment else ''
             # job_order_object_extended = {fragment + key: value for key, value in job_order_object.items()}
-
-            cwl_context['promises'] = job_order_object
-
-            logging.info(
-                '{0}: Final job: \n {1}'.format(self.task_id, dumps(cwl_context, indent=4)))
-
-            return cwl_context
 
         except Exception as e:
             _logger.info(

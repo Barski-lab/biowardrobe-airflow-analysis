@@ -179,17 +179,16 @@ dag = DAG(
         'email': ['biowardrobe@biowardrobe.com'],
         'email_on_failure': False,
         'email_on_retry': False,
-        'retries': 10,
+        'retries': 20,
         'retry_exponential_backoff': True,
         'retry_delay': timedelta(minutes=10),
         'max_retry_delay': timedelta(minutes=60*4)
     },
     schedule_interval='*/10 * * * *',
     catchup=True,
-    max_active_runs=1,
-    dagrun_timeout=timedelta(minutes=60*24*8)
+    max_active_runs=1
 )
-
+# dagrun_timeout = timedelta(minutes=60 * 24 * 8)
 
 bio_force_run = BioWardrobeForceRun(task_id='BioWardrobeForceRun',
                                     dag=dag)

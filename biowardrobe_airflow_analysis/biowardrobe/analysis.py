@@ -13,8 +13,6 @@ from .utils import biowardrobe_settings, remove_not_set_inputs
 from .constants import (STAR_INDICES,
                         BOWTIE_INDICES,
                         CHR_LENGTH_GENERIC_TSV,
-                        EXP_TYPE_UPLOAD,
-                        LIBSTATUS,
                         ANNOTATIONS,
                         ANNOTATION_GENERIC_TSV)
 

@@ -21,8 +21,7 @@ from airflow.exceptions import AirflowSkipException
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.utils.decorators import apply_defaults
 
-from ..biowardrobe.analysis import get_biowardrobe_data
-from ..biowardrobe.constants import biowardrobe_connection_id
+from ..biowardrobe import biowardrobe_connection_id, get_biowardrobe_data
 
 _logger = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from cwl_airflow_parser.cwlstepoperator import CWLStepOperator
 _logger = logging.getLogger(__name__)
 
 
-class CWLJobFinalize(BaseOperator):
+class CWLJobGatherer(BaseOperator):
 
     ui_color = '#1E88E5'
     ui_fgcolor = '#FFF'
@@ -27,7 +27,7 @@ class CWLJobFinalize(BaseOperator):
             reader_task_id=None,
             *args, **kwargs):
         task_id = task_id if task_id else self.__class__.__name__
-        super(CWLJobFinalize, self).__init__(task_id=task_id, *args, **kwargs)
+        super(CWLJobGatherer, self).__init__(task_id=task_id, *args, **kwargs)
 
         self.outputs = self.dag.get_output_list()
         self.outdir = None
@@ -35,7 +35,7 @@ class CWLJobFinalize(BaseOperator):
         self.reader_task_id = None
         self.reader_task_id = reader_task_id if reader_task_id else self.reader_task_id
 
-    def cwl_finalize(self, context):
+    def cwl_gather(self, context):
         upstream_task_ids = [t.task_id for t in self.dag.tasks if isinstance(t, CWLStepOperator)] + \
                             ([self.reader_task_id] if self.reader_task_id else [])
         upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
@@ -77,7 +77,7 @@ class CWLJobFinalize(BaseOperator):
             pass
         _logger.info("Job done: {}".format(dumps(_job_result, indent=4)))
 
-        return _job_result
+        return _job_result, promises
 
     def execute(self, context):
-        return self.cwl_finalize(context)
+        return self.cwl_gather(context)
