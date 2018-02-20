@@ -8,9 +8,7 @@ from contextlib import closing
 from airflow.utils.decorators import apply_defaults
 from airflow.hooks.mysql_hook import MySqlHook
 
-from ..biowardrobe.analysis import get_biowardrobe_data
-from ..biowardrobe.utils import update_status
-from ..biowardrobe.constants import biowardrobe_connection_id
+from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status
 
 from cwl_airflow_parser import CWLJobDispatcher
 

@@ -33,7 +33,6 @@ from airflow import configuration as conf
 
 from warnings import filterwarnings
 from MySQLdb import Warning
-
 filterwarnings('ignore', category=Warning)
 
 from .biowardrobe import Settings
@@ -72,8 +71,8 @@ def generate_biowardrobe_workflow():
 
     _template = u"""#!/usr/bin/env python3
 from airflow import DAG
-from biowardrobe_airflow_analysis.biowardrobe_workflows import create_biowardrobe_workflow
-dag = create_biowardrobe_workflow("{}")
+from biowardrobe_airflow_analysis import biowardrobe_workflow
+dag = biowardrobe_workflow("{}")
 """
     _settings.cursor.execute("select workflow from experimenttype")
     for (workflow,) in _settings.cursor.fetchall():
@@ -89,17 +88,17 @@ dag = create_biowardrobe_workflow("{}")
 
     _template = u"""#!/usr/bin/env python3
 from airflow import DAG
-from biowardrobe_airflow_analysis.biowardrobe.download import dag, dag_t
-d = dag
-dt= dag_t
+from biowardrobe_airflow_analysis import BioWardrobeDownloadDAG, BioWardrobeDownloadTriggerDAG
+d = BioWardrobeDownloadDAG
+dt= BioWardrobeDownloadTriggerDAG
 """
     with open(os.path.join(DAGS_FOLDER, 'biowardrobe_download.py'), 'w') as generated_workflow_stream:
         generated_workflow_stream.write(_template)
 
     _template = u"""#!/usr/bin/env python3
 from airflow import DAG
-from biowardrobe_airflow_analysis.biowardrobe.force_run import dag
-d = dag
+from biowardrobe_airflow_analysis import BioWardrobeForceRunDAG
+d = BioWardrobeForceRunDAG
 """
     with open(os.path.join(DAGS_FOLDER, 'biowardrobe_force_run.py'), 'w') as generated_workflow_stream:
         generated_workflow_stream.write(_template)

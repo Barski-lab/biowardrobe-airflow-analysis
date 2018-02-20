@@ -6,9 +6,7 @@ from contextlib import closing
 from airflow.utils import apply_defaults
 from airflow.hooks.mysql_hook import MySqlHook
 
-from ..biowardrobe.analysis import get_biowardrobe_data
-from ..biowardrobe.utils import update_status
-from ..biowardrobe import biowardrobe_connection_id, upload_results_to_db2
+from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status, upload_results_to_db2
 from ..biowardrobe.biow_exceptions import BiowBasicException
 
 from cwl_airflow_parser import CWLJobGatherer
