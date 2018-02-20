@@ -33,8 +33,8 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         from labdata l
         inner join (experimenttype e,genome g ) ON (e.id=experimenttype_id and g.id=genome_id)
         LEFT JOIN (antibody a) ON (l.antibody_id=a.id)
-        where COALESCE(egroup_id,'') <> '' and COALESCE(name4browser,'') <> ''
-        and l.uid='{biowardrobe_uid}' """
+        where l.uid='{biowardrobe_uid}' """
+    #  COALESCE(egroup_id, '') <> '' and COALESCE(name4browser, '') <> ''
 
     _logger.debug(f"SQL: {_sql}")
 

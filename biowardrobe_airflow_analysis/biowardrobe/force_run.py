@@ -94,13 +94,15 @@ class BioWardrobeForceRun(BaseOperator):
                 continue
 
             for row in _force_run_data:
-                _logger.info("Trigger force run with: {}".format(row))
                 _keep_going = False
                 biowardrobe_uid = row['uid']
                 #  TODO: Check if dag is running in airflow
 
                 #  TODO: If not running!
                 data = self.get_record_data(biowardrobe_uid)
+                if not data:
+                    _logger.error('No biowardrobe data {}'.format(biowardrobe_uid))
+                    continue
                 #
                 #  Actual Force RUN
                 basedir = data['output_folder']
@@ -147,6 +149,7 @@ class BioWardrobeForceRun(BaseOperator):
                                 "update labdata set libstatustxt=%s,deleted=2,datedel=CURDATE() where uid=%s",
                                 ("Deleted", biowardrobe_uid))
                             conn.commit()
+                            _logger.info("Deleted: {}".format(biowardrobe_uid))
                             continue
 
                 _dag_id = os.path.basename(os.path.splitext(data['workflow'])[0])
