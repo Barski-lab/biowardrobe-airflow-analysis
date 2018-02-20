@@ -16,11 +16,11 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-      upload_bigwig,
-      upload_get_stat,
-      upload_rpkm,
-      upload_folder_size,
-      delete_files
+      "upload_bigwig",
+      "upload_get_stat",
+      "upload_rpkm",
+      "upload_folder_size",
+      "delete_files"
   ]'
 WHERE etype='RNA-Seq';
 
@@ -42,11 +42,11 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-      upload_bigwig,
-      upload_get_stat,
-      upload_rpkm,
-      upload_folder_size,
-      delete_files
+      "upload_bigwig",
+      "upload_get_stat",
+      "upload_rpkm",
+      "upload_folder_size",
+      "delete_files"
   ]'
 WHERE etype='RNA-Seq pair';
 
@@ -67,12 +67,12 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-    upload_bigwig_upstream,
-    upload_bigwig_downstream,
-    upload_get_stat,
-    upload_rpkm,
-    upload_folder_size,
-    delete_files
+      "upload_bigwig_upstream",
+      "upload_bigwig_downstream",
+      "upload_get_stat",
+      "upload_rpkm",
+      "upload_folder_size",
+      "delete_files"
   ]'
 WHERE etype='RNA-Seq dUTP';
 
@@ -96,12 +96,12 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-    upload_bigwig_upstream,
-    upload_bigwig_downstream,
-    upload_get_stat,
-    upload_rpkm,
-    upload_folder_size,
-    delete_files
+      "upload_bigwig_upstream",
+      "upload_bigwig_downstream",
+      "upload_get_stat",
+      "upload_rpkm",
+      "upload_folder_size",
+      "delete_files"
   ]'
 WHERE etype='RNA-Seq dUTP Mitochondrial';
 
@@ -123,12 +123,12 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-    upload_bigwig_upstream,
-    upload_bigwig_downstream,
-    upload_get_stat,
-    upload_rpkm,
-    upload_folder_size,
-    delete_files
+      "upload_bigwig_upstream",
+      "upload_bigwig_downstream",
+      "upload_get_stat",
+      "upload_rpkm",
+      "upload_folder_size",
+      "delete_files"
   ]'
 WHERE etype='RNA-Seq dUTP pair';
 
@@ -153,13 +153,13 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-    upload_macs2_fragment_stat,
-    upload_iaintersect_result,
-    upload_get_stat,
-    upload_atdp,
-    upload_bigwig,
-    upload_folder_size,
-    delete_files
+    "upload_macs2_fragment_stat",
+    "upload_iaintersect_result",
+    "upload_get_stat",
+    "upload_atdp",
+    "upload_bigwig",
+    "upload_folder_size",
+    "delete_files"
   ]'
 WHERE etype='DNA-Seq';
 
@@ -185,12 +185,12 @@ UPDATE `ems`.`experimenttype` SET
     "uid": "{uid}"
   }}',
   upload_rules='[
-    upload_macs2_fragment_stat,
-    upload_iaintersect_result,
-    upload_get_stat,
-    upload_atdp,
-    upload_bigwig,
-    upload_folder_size,
-    delete_files
+    "upload_macs2_fragment_stat",
+    "upload_iaintersect_result",
+    "upload_get_stat",
+    "upload_atdp",
+    "upload_bigwig",
+    "upload_folder_size",
+    "delete_files"
   ]'
 WHERE etype='DNA-Seq pair';
