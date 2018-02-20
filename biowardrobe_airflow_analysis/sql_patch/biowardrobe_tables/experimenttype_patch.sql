@@ -76,7 +76,7 @@ UPDATE `ems`.`experimenttype` SET
   ]'
 WHERE etype='RNA-Seq dUTP';
 
-insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'RNA-Seq dUTP Mitochondrial', '', '';
+insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'RNA-Seq dUTP Mitochondrial', '', '', '';
 
 # RNA-Seq single dUTP Mitochondrial
 UPDATE `ems`.`experimenttype` SET
@@ -194,3 +194,71 @@ UPDATE `ems`.`experimenttype` SET
     "delete_files"
   ]'
 WHERE etype='DNA-Seq pair';
+
+
+
+insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq Trimm', '', '', '';
+
+# DNA-Seq
+UPDATE `ems`.`experimenttype` SET
+  workflow='trim-chipseq-se.cwl',
+  template='{{
+    "fastq_file": {{"class": "File", "location": "{fastq_file_upstream}", "format": "http://edamontology.org/format_1930"}},
+    "indices_folder": {{"class": "Directory", "location": "{bowtie_indices_folder}"}},
+    "annotation_file": {{"class": "File", "location": "{annotation_input_file}", "format": "http://edamontology.org/format_3475"}},
+    "clip_3p_end": {clip_3p_end},
+    "clip_5p_end": {clip_5p_end},
+    "threads": {threads},
+    "remove_duplicates": "{remove_duplicates}",
+    "control_file": {{"class": "File", "location": "{control_file}", "format": "http://edamontology.org/format_2572"}},
+    "exp_fragment_size": {exp_fragment_size},
+    "force_fragment_size": "{force_fragment_size}",
+    "broad_peak": "{broad_peak}",
+    "chrom_length": {{"class": "File", "location": "{chrom_length}", "format": "http://edamontology.org/format_2330"}},
+    "genome_size": "{genome_size}",
+    "output_folder": "{output_folder}",
+    "uid": "{uid}"
+  }}',
+  upload_rules='[
+    "upload_macs2_fragment_stat",
+    "upload_iaintersect_result",
+    "upload_get_stat",
+    "upload_atdp",
+    "upload_bigwig",
+    "upload_folder_size",
+    "delete_files"
+  ]'
+WHERE etype='DNA-Seq Trimm';
+
+insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq pair Trimm', '', '', '';
+
+# DNA-Seq
+UPDATE `ems`.`experimenttype` SET
+  workflow='trim-chipseq-pe.cwl',
+  template='{{
+    "fastq_file": {{"class": "File", "location": "{fastq_file_upstream}", "format": "http://edamontology.org/format_1930"}},
+    "indices_folder": {{"class": "Directory", "location": "{bowtie_indices_folder}"}},
+    "annotation_file": {{"class": "File", "location": "{annotation_input_file}", "format": "http://edamontology.org/format_3475"}},
+    "clip_3p_end": {clip_3p_end},
+    "clip_5p_end": {clip_5p_end},
+    "threads": {threads},
+    "remove_duplicates": "{remove_duplicates}",
+    "control_file": {{"class": "File", "location": "{control_file}", "format": "http://edamontology.org/format_2572"}},
+    "exp_fragment_size": {exp_fragment_size},
+    "force_fragment_size": "{force_fragment_size}",
+    "broad_peak": "{broad_peak}",
+    "chrom_length": {{"class": "File", "location": "{chrom_length}", "format": "http://edamontology.org/format_2330"}},
+    "genome_size": "{genome_size}",
+    "output_folder": "{output_folder}",
+    "uid": "{uid}"
+  }}',
+  upload_rules='[
+    "upload_macs2_fragment_stat",
+    "upload_iaintersect_result",
+    "upload_get_stat",
+    "upload_atdp",
+    "upload_bigwig",
+    "upload_folder_size",
+    "delete_files"
+  ]'
+WHERE etype='DNA-Seq pair Trimm';
