@@ -23,13 +23,19 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
     """Generate and export job file to a specific folder"""
     _settings = biowardrobe_settings(cursor)
 
-    _sql = f"""select e.etype, e.workflow, e.template, l.uid, g.db, g.findex, g.annotation, g.annottable,
-        g.genome, l.forcerun, l.url, l.params, l.deleted,
+    _sql = f"""select 
+        e.etype, e.workflow, e.template, e.upload_rules, 
+
+        g.db, g.findex, g.annotation, g.annottable, g.genome, g.gsize as genome_size, 
+
+        l.uid, l.forcerun, l.url, l.params, l.deleted, 
         COALESCE(l.trim5,0) as clip_5p_end, COALESCE(l.trim3,0) as clip_3p_end,
         COALESCE(fragmentsizeexp,0) as exp_fragment_size, COALESCE(fragmentsizeforceuse,0) as force_fragment_size,
-        g.gsize as genome_size,
-        COALESCE(a.properties,0) as broad_peak, COALESCE(l.rmdup,0) as remove_duplicates,
-        COALESCE(control,0) as control, COALESCE(control_id,'') as control_id
+        COALESCE(l.rmdup,0) as remove_duplicates,
+        COALESCE(control,0) as control, COALESCE(control_id,'') as control_id,
+
+        COALESCE(a.properties,0) as broad_peak
+        
         from labdata l
         inner join (experimenttype e,genome g ) ON (e.id=experimenttype_id and g.id=genome_id)
         LEFT JOIN (antibody a) ON (l.antibody_id=a.id)
