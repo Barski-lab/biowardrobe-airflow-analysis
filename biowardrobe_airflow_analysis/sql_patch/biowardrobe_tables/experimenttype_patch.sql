@@ -197,7 +197,7 @@ WHERE etype='DNA-Seq pair';
 
 
 
-insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq Trimm', '', '', '';
+insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq Trim Galore', '', '', '';
 
 # DNA-Seq
 UPDATE `ems`.`experimenttype` SET
@@ -228,9 +228,9 @@ UPDATE `ems`.`experimenttype` SET
     "upload_folder_size",
     "delete_files"
   ]'
-WHERE etype='DNA-Seq Trimm';
+WHERE etype='DNA-Seq Trim Galore';
 
-insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq pair Trimm', '', '', '';
+insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq pair Trim Galore', '', '', '';
 
 # DNA-Seq
 UPDATE `ems`.`experimenttype` SET
@@ -261,4 +261,4 @@ UPDATE `ems`.`experimenttype` SET
     "upload_folder_size",
     "delete_files"
   ]'
-WHERE etype='DNA-Seq pair Trimm';
+WHERE etype='DNA-Seq pair Trim Galore';
