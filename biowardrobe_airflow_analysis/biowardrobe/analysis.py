@@ -34,11 +34,15 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         COALESCE(l.rmdup,0) as remove_duplicates,
         COALESCE(control,0) as control, COALESCE(control_id,'') as control_id,
 
-        COALESCE(a.properties,0) as broad_peak
+        COALESCE(a.properties,0) as broad_peak,
+
+        COALESCE(w.email,'') as email
         
         from labdata l
         inner join (experimenttype e,genome g ) ON (e.id=experimenttype_id and g.id=genome_id)
         LEFT JOIN (antibody a) ON (l.antibody_id=a.id)
+        LEFT JOIN (worker w) ON (l.worker_id=w.id)
+
         where l.uid='{biowardrobe_uid}' """
     #  COALESCE(egroup_id, '') <> '' and COALESCE(name4browser, '') <> ''
 

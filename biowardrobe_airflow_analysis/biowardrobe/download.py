@@ -139,6 +139,7 @@ def branch_download_func(**context):
     context['ti'].xcom_push(key='uid', value=data['uid'])
     context['ti'].xcom_push(key='upload', value=data['upload'])
     context['ti'].xcom_push(key='output_folder', value=data['output_folder'])
+    context['ti'].xcom_push(key='email', value=data['email'])
 
     if re.match("^https?://|^s?ftp://|^-", data['url']):
         return "download_aria2"
