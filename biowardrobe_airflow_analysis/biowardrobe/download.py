@@ -161,7 +161,7 @@ branch_download = BranchPythonOperator(
 #
 download_aria2 = download_base + """
 
-aria2c -q -d "./" --user-agent="${user_agent}" --all-proxy="${PROXY}"\
+aria2c -q -d "./" --user-agent="${user_agent}" --all-proxy="${PROXY}" \
 --always-resume --allow-overwrite --max-resume-failure-tries=40 \
 -o "${TMPFILE}" "${URL}"
 
@@ -247,7 +247,6 @@ download_local = download_base + """
 FTEST=`find ${UDIR}  -type f -name "*${URL}*" -print|wc -l`
 if [ ${FTEST} -lt 1 ]; then
   echo "Skip local: File not found ${FTEST}"
-  exit 1
 else
   if [ ${FTEST} -gt 2 ]; then
     echo "Error: Bad filter"
@@ -279,7 +278,10 @@ else
   fi
 fi
 
-"""+_extra_local_file_content
+"""+_extra_local_file_content+"""
+
+exit 1
+"""
 
 download_local_operator = BashOperator(
     task_id='download_local',
