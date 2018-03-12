@@ -83,7 +83,8 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
                                                      ANNOTATION_GENERIC_TSV))),
         "exclude_chr": "control" if kwargs["spike"] else "",
         "output_folder": norm_path("/".join((kwargs["raw_data"], kwargs["uid"]))),
-        "control_file": None
+        "control_file": norm_path("/".join((kwargs["raw_data"], kwargs["control_id"], kwargs["control_id"] + '.bam')))
+        if kwargs['control_id'] else None
     })
 
     #### Uncomment
