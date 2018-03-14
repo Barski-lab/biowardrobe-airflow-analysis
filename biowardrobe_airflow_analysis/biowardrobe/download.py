@@ -199,6 +199,9 @@ else
   echo "Error: not a fastq"
   exit 1
 fi
+
+bzip2 "${UUID}.fastq"
+
 """
 
 url_download = BashOperator(
@@ -218,10 +221,12 @@ fastq-dump --split-files "${URL}"
 
 if [ -f ${URL}_1.fastq ]; then
  mv "${URL}_1.fastq" "${UUID}".fastq
+ bzip2 "${UUID}".fastq
 fi
 
 if [ -f "${URL}_2.fastq" ]; then
  mv "${URL}_2.fastq" "${UUID}"_2.fastq
+ bzip2 "${UUID}"_2.fastq
 fi
 
 echo "Ok: fastq"
@@ -272,10 +277,27 @@ else
             exit 1
         esac
 
+      N1=`awk '(NR+3) % 4 == 0 && $1 ~ /^@/' ${UUID}_${lines}.fastq |wc -l`
+      N2=`awk '(NR+1) % 4 == 0 && $1 ~ /^\+/' ${UUID}_${lines}.fastq |wc -l`
+      echo "is it fastq? $N1 == $N2"
+      if [ $N1 = $N2 ]; then
+        echo "Ok: fastq"
+      else
+        echo "Error: not a fastq"
+        exit 1
+      fi
+
       lines=$((lines+1))
     done
+    
     mv "./${UUID}_1.fastq" "./${UUID}.fastq"
   fi
+
+
+  bzip2 "${UUID}.fastq"
+  bzip2 "${UUID}_2.fastq"
+  
+  exit 0
 fi
 
 """+_extra_local_file_content+"""

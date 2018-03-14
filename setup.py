@@ -67,7 +67,7 @@ setup(
     # license='Apache-2.0',
     packages=find_packages(),
     install_requires=[
-        'cwltool',
+        'cwltool==1.0.20180220121300',
         'sqlparse',
         'jsonmerge',
         'ruamel.yaml < 0.15',
