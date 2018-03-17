@@ -1,7 +1,7 @@
 from warnings import filterwarnings
 from MySQLdb import Warning
 filterwarnings('ignore', category=Warning)
-from ..biowardrobe import Settings
+from biowardrobe_airflow_analysis.biowardrobe import Settings
 
 
 _settings = Settings.Settings()
