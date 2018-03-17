@@ -20,6 +20,14 @@ for row in rows:
     table_basename = f"`experiments`.`{row[0]}"
     for suffix in suffixes:
         _settings.cursor.execute(f""" ALTER TABLE {table_basename}{suffix}
+                                DROP INDEX `refseq_id_idx`,
+                                DROP INDEX `gene_id_idx` ,
+                                DROP INDEX `chr_idx` ,
+                                DROP INDEX `txStart_idx` ,
+                                DROP INDEX `txEnd_idx`;                                
+                                """)
+    for suffix in suffixes:
+        _settings.cursor.execute(f""" ALTER TABLE {table_basename}{suffix}
                                 ADD INDEX `refseq_id_idx` USING BTREE (`refseq_id` ASC),
                                 ADD INDEX `gene_id_idx` USING BTREE (`gene_id` ASC),
                                 ADD INDEX `chr_idx` USING BTREE (`chrom` ASC),
