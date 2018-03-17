@@ -73,8 +73,9 @@ def get_biowardrobe_data(cursor, biowardrobe_uid):
         "experimentsdb": _settings['experimentsdb']
     })
     kwargs.update({
-        "fastq_file_upstream": norm_path("/".join((kwargs["raw_data"], kwargs["uid"], kwargs["uid"] + '.fastq'))),
-        "fastq_file_downstream": norm_path("/".join((kwargs["raw_data"], kwargs["uid"], kwargs["uid"] + '_2.fastq'))),
+        # TODO: move extension into database
+        "fastq_file_upstream": norm_path("/".join((kwargs["raw_data"], kwargs["uid"], kwargs["uid"] + '.fastq.bz2'))),
+        "fastq_file_downstream": norm_path("/".join((kwargs["raw_data"], kwargs["uid"], kwargs["uid"] + '_2.fastq.bz2'))),
         "star_indices_folder": norm_path("/".join((kwargs["indices"], STAR_INDICES, kwargs["findex"]))),
         "bowtie_indices_folder": norm_path("/".join((kwargs["indices"], BOWTIE_INDICES, kwargs["findex"]))),
         "bowtie_indices_folder_ribo": norm_path("/".join((kwargs["indices"], BOWTIE_INDICES, kwargs["findex"] + "_ribo"))),

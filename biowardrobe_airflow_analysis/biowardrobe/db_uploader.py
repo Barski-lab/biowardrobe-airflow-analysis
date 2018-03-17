@@ -158,12 +158,7 @@ def upload_rpkm(self, uid, filename):
                                  txEnd INT NULL,
                                  strand VARCHAR(1),
                                  TOT_R_0 FLOAT,
-                                 RPKM_0 FLOAT,
-                                 INDEX refseq_id_idx (refseq_id) using btree,
-                                 INDEX gene_id_idx (gene_id) using btree,
-                                 INDEX chr_idx (chrom) using btree,
-                                 INDEX txStart_idx (txStart) using btree,
-                                 INDEX txEnd_idx (txEnd) using btree
+                                 RPKM_0 FLOAT
                                 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 """)
 
     self.conn.commit()
@@ -223,6 +218,14 @@ def upload_rpkm(self, uid, filename):
                         """ WHERE strand = '-'
                             GROUP BY chrom, txEnd, strand""")
 
+    for suffix in suffixes:
+        self.cursor.execute(f""" ALTER TABLE {table_basename}{suffix}
+                                ADD INDEX `refseq_id_idx` USING BTREE (`refseq_id` ASC),
+                                ADD INDEX `gene_id_idx` USING BTREE (`gene_id` ASC),
+                                ADD INDEX `chr_idx` USING BTREE (`chrom` ASC),
+                                ADD INDEX `txStart_idx` USING BTREE (`txStart` ASC),
+                                ADD INDEX `txEnd_idx` USING BTREE (`txEnd` ASC);
+                                """)
     self.conn.commit()
 
 
