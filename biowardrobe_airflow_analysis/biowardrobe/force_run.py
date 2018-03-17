@@ -119,16 +119,16 @@ class BioWardrobeForceRun(BaseOperator):
                     pass
 
                 if int(data['deleted']) == 0:
-                    cmd = 'bunzip2 {}*.fastq.bz2'.format(biowardrobe_uid)
-                    try:
-                        check_output(cmd, shell=True)
-                    except Exception as e:
-                        _logger.error("Can't uncompress: {} {}".format(cmd, str(e)))
+                    # cmd = 'bunzip2 {}*.fastq.bz2'.format(biowardrobe_uid)
+                    # try:
+                    #     check_output(cmd, shell=True)
+                    # except Exception as e:
+                    #     _logger.error("Can't uncompress: {} {}".format(cmd, str(e)))
 
-                    if not os.path.isfile(biowardrobe_uid + '.fastq'):
+                    if not os.path.isfile(biowardrobe_uid + '.fastq.bz2'):
                         _logger.error("File does not exist: {}".format(biowardrobe_uid))
                         continue
-                    if not os.path.isfile(biowardrobe_uid + '_2.fastq') and data['pair']:
+                    if not os.path.isfile(biowardrobe_uid + '_2.fastq.bz2') and data['pair']:
                         _logger.error("File 2 does not exist: {}".format(biowardrobe_uid))
                         continue
                 else:
@@ -146,7 +146,7 @@ class BioWardrobeForceRun(BaseOperator):
                             conn.commit()
                         else:
                             cursor.execute(
-                                "update labdata set libstatustxt=%s,deleted=2,datedel=CURDATE() where uid=%s",
+                                "update labdata set libstatustxt=%s, deleted=2, datedel=CURDATE() where uid=%s",
                                 ("Deleted", biowardrobe_uid))
                             conn.commit()
                             _logger.info("Deleted: {}".format(biowardrobe_uid))

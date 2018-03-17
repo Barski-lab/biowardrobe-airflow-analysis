@@ -251,14 +251,13 @@ download_local = download_base + """
 
 FTEST=`find ${UDIR}  -type f -name "*${URL}*" -print|wc -l`
 if [ ${FTEST} -lt 1 ]; then
-  echo "Skip local: File not found ${FTEST}"
-else
-  if [ ${FTEST} -gt 2 ]; then
+      echo "Skip local: File not found ${FTEST}"
+elif [ ${FTEST} -gt 2 ]; then
     echo "Error: Bad filter"
     exit 1
-  else
+else
     lines=1
-    for i in $(find ${UDIR}  -type f -name "*${URL}*" -print); do
+    for i in $(find ${UDIR}  -type f -name "*${URL}*" -print|sort); do
         mv "${i}" "./${UUID}_${lines}"
 
         T=`file -b "./${UUID}_${lines}" | awk '{print $1}'`
@@ -289,15 +288,20 @@ else
 
       lines=$((lines+1))
     done
+
+    if [ -f "./${UUID}_1.fastq" ]; then
+        mv "./${UUID}_1.fastq" "./${UUID}.fastq"
+        bzip2 "${UUID}".fastq
+    else
+        echo "No file? ${UUID}.fastq"
+        exit 1
+    fi
     
-    mv "./${UUID}_1.fastq" "./${UUID}.fastq"
-  fi
-
-
-  bzip2 "${UUID}.fastq"
-  bzip2 "${UUID}_2.fastq"
-  
-  exit 0
+    if [ -f "${UUID}_2.fastq" ]; then
+        bzip2 "${UUID}"_2.fastq
+    fi
+      
+    exit 0
 fi
 
 """+_extra_local_file_content+"""

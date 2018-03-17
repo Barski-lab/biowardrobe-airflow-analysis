@@ -18,6 +18,7 @@ rows = _settings.cursor.fetchall()
 
 for row in rows:
     table_basename = f"`experiments`.`{row[0]}"
+    print(row)
     for suffix in suffixes:
         _settings.cursor.execute(f""" ALTER TABLE {table_basename}{suffix}
                                 DROP INDEX `refseq_id_idx`,
@@ -26,7 +27,6 @@ for row in rows:
                                 DROP INDEX `txStart_idx` ,
                                 DROP INDEX `txEnd_idx`;                                
                                 """)
-    for suffix in suffixes:
         _settings.cursor.execute(f""" ALTER TABLE {table_basename}{suffix}
                                 ADD INDEX `refseq_id_idx` USING BTREE (`refseq_id` ASC),
                                 ADD INDEX `gene_id_idx` USING BTREE (`gene_id` ASC),
