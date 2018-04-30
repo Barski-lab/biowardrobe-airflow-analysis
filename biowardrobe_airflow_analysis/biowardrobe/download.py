@@ -142,7 +142,7 @@ def branch_download_func(**context):
     context['ti'].xcom_push(key='output_folder', value=data['output_folder'])
     context['ti'].xcom_push(key='email', value=data['email'])
 
-    if re.match("^(-B|(GSM|SR[ARX])[0-9]+)( (GSM|SR[ARX])[0-9]+)*$", data['url']):
+    if re.match("^(GSM|SR[ARX])[0-9]+( (GSM|SR[ARX])[0-9]+)*$", data['url']):
         return "download_sra"
 
     if re.match("^https?://|^s?ftp://|^-", data['url']):
@@ -272,18 +272,26 @@ url_download.set_upstream(branch_download)
 #  A STEP
 #
 download_sra = download_base + """
-fastq-dump --split-files "${URL}"
 
-if [ -f ${URL}_1.fastq ]; then
- mv "${URL}_1.fastq" "${UUID}".fastq
- bzip2 "${UUID}".fastq
-fi
+for U in $(echo ${URL}) 
+do
+    fastq-dump --split-3 -B ${U}
 
-if [ -f "${URL}_2.fastq" ]; then
- mv "${URL}_2.fastq" "${UUID}"_2.fastq
- bzip2 "${UUID}"_2.fastq
-fi
+    if [ -f ${U}_1.fastq ]; then
+     mv -f "${U}_1.fastq" "${U}".fastq
+    fi
 
+    cat "${U}.fastq" >> "${UUID}".fastq
+    
+    if [ -f "${U}_2.fastq" ]; then
+     cat "${U}_2.fastq" >> "${UUID}"_2.fastq
+    fi
+    
+    rm -f "${U}.fastq"
+    rm -f "${U}_2.fastq"
+done
+
+bzip2 "${UUID}"*.fastq
 echo "Ok: fastq"
 """
 
