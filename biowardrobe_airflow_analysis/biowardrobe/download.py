@@ -7,9 +7,9 @@ import logging
 from contextlib import closing
 from datetime import timedelta, datetime
 import re
-import uuid
 import os
 from shutil import copyfileobj
+import pathlib
 
 import airflow
 from airflow.models import DAG, Variable
@@ -188,6 +188,8 @@ def copy_from_func(**context):
                     _tmpfiles1.append(_copy_from['fastq_file_upstream'])
                     if data['pair']:
                         _tmpfiles2.append(_copy_from['fastq_file_downstream'])
+
+    pathlib.Path(data['output_folder']).mkdir(parents=True, exist_ok=True, mode=0o777)
 
     bufsize = 16 * 1024
     with open(data['fastq_file_upstream'], "wb") as outfile:
