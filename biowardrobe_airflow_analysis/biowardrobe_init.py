@@ -114,7 +114,7 @@ d = BioWardrobeForceRunDAG
                                     slots=5,
                                     description="pool to download files")]
     pools = [api_client.create_pool(name='biowardrobe_basic_analysis',
-                                    slots=2,
+                                    slots=1,
                                     description="pool to run basic analysis")]
 
     if not conf.has_option('cwl', 'tmp_folder'):
@@ -144,11 +144,13 @@ d = BioWardrobeForceRunDAG
                 data = s.read()
                 # OS X
             dst = os.path.join(_sys_dir, scripts)
-            if os.path.exists(dst) and not os.path.exists(dst+".orig"):
-                copyfile(dst, dst+".orig")
 
-            with open(dst, 'w') as w:
-                w.write(data.format(AIRFLOW_HOME=AIRFLOW_HOME))
+            if os.path.exists(dst):
+                with open(dst + '.new', 'w') as w:
+                    w.write(data.format(AIRFLOW_HOME=AIRFLOW_HOME))
+            else:
+                with open(dst, 'w') as w:
+                    w.write(data.format(AIRFLOW_HOME=AIRFLOW_HOME))
 
     # if platform == "linux" or platform == "linux2":
     # linux

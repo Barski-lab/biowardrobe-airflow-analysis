@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import os
 import logging
 from cwl_airflow_parser.cwldag import CWLDAG
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from biowardrobe_cwl_workflows import available
 
@@ -20,10 +19,11 @@ def create_biowardrobe_workflow(workflow):
         'email': ['biowardrobe@biowardrobe.com'],
         'email_on_failure': False,
         'email_on_retry': False,
-        'retries': 20,
+        'pool': 'biowardrobe_basic_analysis',
+        'retries': 10,
         'retry_exponential_backoff': True,
-        'retry_delay': timedelta(minutes=30),
-        'max_retry_delay': timedelta(minutes=60 * 4)
+        'retry_delay': timedelta(minutes=60),
+        'max_retry_delay': timedelta(minutes=60 * 24)
     },
         cwl_workflow=_workflow_file)
     dag.create()

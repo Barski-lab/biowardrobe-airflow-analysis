@@ -9,11 +9,12 @@ from datetime import timedelta, datetime
 import re
 import uuid
 import os
+from shutil import copyfileobj
 
 import airflow
 from airflow.models import DAG, Variable
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import BranchPythonOperator
+from airflow.operators.python_operator import BranchPythonOperator, PythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.utils.trigger_rule import TriggerRule
@@ -141,11 +142,14 @@ def branch_download_func(**context):
     context['ti'].xcom_push(key='output_folder', value=data['output_folder'])
     context['ti'].xcom_push(key='email', value=data['email'])
 
+    if re.match("^(-B|(GSM|SR[ARX])[0-9]+)( (GSM|SR[ARX])[0-9]+)*$", data['url']):
+        return "download_sra"
+
     if re.match("^https?://|^s?ftp://|^-", data['url']):
         return "download_aria2"
 
-    if re.match("^(GSM|SR[ARX])[0-9]+$", data['url']):
-        return "download_sra"
+    if re.match("^[0-9]+( [0-9]+)*$", data['url']):
+        return "copy_from_biowardrobe"
 
     return "download_local"
 
@@ -155,6 +159,57 @@ branch_download = BranchPythonOperator(
     provide_context=True,
     python_callable=branch_download_func,
     dag=dag)
+
+
+#
+#  A STEP
+#
+def copy_from_func(**context):
+    biowardrobe_uid = context['dag_run'].conf['biowardrobe_uid'] \
+        if 'biowardrobe_uid' in context['dag_run'].conf else None
+
+    if not biowardrobe_uid:
+        raise Exception('biowardrobe_id must be provided')
+
+    data = {}
+    _tmpfiles1 = []
+    _tmpfiles2 = []
+    mysql = MySqlHook(mysql_conn_id=biowardrobe_connection_id)
+    with closing(mysql.get_conn()) as conn:
+        with closing(conn.cursor()) as cursor:
+            data = get_biowardrobe_data(cursor=cursor,
+                                        biowardrobe_uid=biowardrobe_uid)
+
+            cursor.execute("select uid from labdata where id in (" + data['url'].replace(' ', ',') + ")")
+            for (_uuid,) in cursor.fetchall():
+                _copy_from = get_biowardrobe_data(cursor=cursor,
+                                                  biowardrobe_uid=_uuid)
+                if _copy_from['pair'] == data['pair']:
+                    _tmpfiles1.append(_copy_from['fastq_file_upstream'])
+                    if data['pair']:
+                        _tmpfiles2.append(_copy_from['fastq_file_downstream'])
+
+    bufsize = 16 * 1024
+    with open(data['fastq_file_upstream'], "wb") as outfile:
+        for filename in _tmpfiles1:
+            print("Adding " + filename + "...")
+            with open(filename, "rb") as fq_file:
+                copyfileobj(fq_file, outfile, bufsize)
+
+    if data['pair']:
+        with open(data['fastq_file_downstream'], "wb") as outfile:
+            for filename in _tmpfiles2:
+                print("Adding " + filename + "...")
+                with open(filename, "rb") as fq_file:
+                    copyfileobj(fq_file, outfile, bufsize)
+
+
+copy_from_biowardrobe = PythonOperator(
+    task_id='copy_from_biowardrobe',
+    provide_context=True,
+    python_callable=copy_from_func,
+    dag=dag)
+copy_from_biowardrobe.set_upstream(branch_download)
 
 #
 #  A STEP
@@ -331,7 +386,7 @@ success_finish_operator = \
     BioWardrobeTriggerBasicAnalysisOperator(task_id='success_finish',
                                             trigger_rule=TriggerRule.ONE_SUCCESS,
                                             dag=dag)
-success_finish_operator.set_upstream([cli_download_sra, url_download, download_local_operator])
+success_finish_operator.set_upstream([cli_download_sra, url_download, download_local_operator, copy_from_biowardrobe])
 
 
 #
@@ -346,7 +401,7 @@ error_finish_operator = MySqlOperator(
     trigger_rule=TriggerRule.ONE_FAILED,
     autocommit=True,
     dag=dag)
-error_finish_operator.set_upstream([cli_download_sra, url_download, download_local_operator])
+error_finish_operator.set_upstream([cli_download_sra, url_download, download_local_operator, copy_from_biowardrobe])
 
 
 #
