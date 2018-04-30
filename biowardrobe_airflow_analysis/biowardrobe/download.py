@@ -181,9 +181,9 @@ def copy_from_func(**context):
                                         biowardrobe_uid=biowardrobe_uid)
 
             cursor.execute("select uid from labdata where id in (" + data['url'].replace(' ', ',') + ")")
-            for (_uuid,) in cursor.fetchall():
+            for row in cursor.fetchall():
                 _copy_from = get_biowardrobe_data(cursor=cursor,
-                                                  biowardrobe_uid=_uuid)
+                                                  biowardrobe_uid=row['uid'])
                 if _copy_from['pair'] == data['pair']:
                     _tmpfiles1.append(_copy_from['fastq_file_upstream'])
                     if data['pair']:
@@ -192,14 +192,14 @@ def copy_from_func(**context):
     bufsize = 16 * 1024
     with open(data['fastq_file_upstream'], "wb") as outfile:
         for filename in _tmpfiles1:
-            print("Adding " + filename + "...")
+            _logger.info("Adding " + filename + "...")
             with open(filename, "rb") as fq_file:
                 copyfileobj(fq_file, outfile, bufsize)
 
     if data['pair']:
         with open(data['fastq_file_downstream'], "wb") as outfile:
             for filename in _tmpfiles2:
-                print("Adding " + filename + "...")
+                _logger.info("Adding " + filename + "...")
                 with open(filename, "rb") as fq_file:
                     copyfileobj(fq_file, outfile, bufsize)
 
