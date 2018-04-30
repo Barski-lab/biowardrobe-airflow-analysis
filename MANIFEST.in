@@ -1,0 +1,5 @@
+include biowardrobe_airflow_analysis/sql_patch/biowardrobe_tables/*.sql
+include biowardrobe_airflow_analysis/sql_patch/biowardrobe_views/*.sql
+include biowardrobe_airflow_analysis/system/macosx/*.plist
+include biowardrobe_airflow_analysis/system/ubuntu/*.service
+
