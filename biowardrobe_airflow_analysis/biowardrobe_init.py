@@ -110,12 +110,18 @@ d = BioWardrobeForceRunDAG
             password=_settings.config[2], schema=_settings.config[3],
             extra="{\"cursor\":\"dictcursor\"}"))
 
-    pools = [api_client.create_pool(name='biowardrobe_download',
-                                    slots=5,
-                                    description="pool to download files")]
-    pools = [api_client.create_pool(name='biowardrobe_basic_analysis',
-                                    slots=1,
-                                    description="pool to run basic analysis")]
+    try:
+        api_client.get_pool(name='biowardrobe_download')
+    except Exception as e:
+        api_client.create_pool(name='biowardrobe_download',
+                               slots=5,
+                               description="pool to download files")
+    try:
+        api_client.get_pool(name='biowardrobe_basic_analysis')
+    except Exception as e:
+        api_client.create_pool(name='biowardrobe_basic_analysis',
+                               slots=1,
+                               description="pool to run basic analysis")
 
     if not conf.has_option('cwl', 'tmp_folder'):
         if not os.path.exists(conf.AIRFLOW_CONFIG+'.orig'):
