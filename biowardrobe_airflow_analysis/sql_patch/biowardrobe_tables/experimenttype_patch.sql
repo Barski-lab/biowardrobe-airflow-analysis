@@ -267,7 +267,8 @@ insert IGNORE into `ems`.`experimenttype` SELECT NULL, 'DNA-Seq pair Trim Galore
 UPDATE `ems`.`experimenttype` SET
   workflow='trim-chipseq-pe.cwl',
   template='{{
-    "fastq_file": {{"class": "File", "location": "{fastq_file_upstream}", "format": "http://edamontology.org/format_1930"}},
+    "fastq_file_upstream": {{"class": "File", "location": "{fastq_file_upstream}", "format": "http://edamontology.org/format_1930"}},
+    "fastq_file_downstream": {{"class": "File", "location": "{fastq_file_downstream}", "format": "http://edamontology.org/format_1930"}},
     "indices_folder": {{"class": "Directory", "location": "{bowtie_indices_folder}"}},
     "annotation_file": {{"class": "File", "location": "{annotation_input_file}", "format": "http://edamontology.org/format_3475"}},
     "clip_3p_end": {clip_3p_end},
