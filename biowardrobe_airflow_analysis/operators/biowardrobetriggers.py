@@ -89,8 +89,8 @@ class BioWardrobeTriggerDownloadOperator(BaseOperator):
                             dag_id=self.trigger_dag_id,
                             run_id=_run_id,
                             conf={'biowardrobe_uid': row['uid'], 'run_id': _run_id},
-                            execution_date=datetime.now(),
-                            start_date=datetime.now(),
+                            execution_date=datetime.utcnow(),
+                            start_date=datetime.utcnow(),
                             external_trigger=True)
                         logging.info("Creating DagRun {}".format(dr))
                         session.add(dr)
@@ -142,7 +142,7 @@ class BioWardrobeTriggerBasicAnalysisOperator(BaseOperator):
                     dag_id=dag_id,
                     run_id=run_id,
                     conf=payload,
-                    execution_date=datetime.now(),
+                    execution_date=datetime.utcnow(),
                     external_trigger=True)
                 logging.info("Creating DagRun {}".format(dr))
                 session.add(dr)

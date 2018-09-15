@@ -92,7 +92,7 @@ https_proxy="${{PROXY}}"
 
 args = {
     'owner': 'airflow',
-    'start_date': datetime.now(),
+    'start_date': datetime.utcnow(),
     'depends_on_past': False,
     'email': ['biowardrobe@biowardrobe.com'],
     'email_on_failure': False,
