@@ -70,7 +70,7 @@ setup(
         'sqlparse',
         'jsonmerge',
         'biowardrobe-cwl-workflows == 1.0.20180918070911',
-        'cwl-airflow-parser == 1.0.20180918065555'
+        'cwl-airflow-parser == 1.0.20180918220755'
     ],
     zip_safe=False,
     entry_points={
