@@ -6,6 +6,8 @@ from datetime import timedelta
 
 from biowardrobe_cwl_workflows import available
 
+from cwl_airflow_parser import CWLJobGatherer
+
 from .operators import BioWardrobeJobDispatcher, BioWardrobeJobGatherer
 
 _logger = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ def create_biowardrobe_workflow(workflow):
         cwl_workflow=_workflow_file)
     dag.create()
     dag.add(BioWardrobeJobDispatcher(dag=dag), to='top')
+    dag.add(CWLJobGatherer(dag=dag), to='bottom')
     dag.add(BioWardrobeJobGatherer(dag=dag), to='bottom')
 
     return dag
