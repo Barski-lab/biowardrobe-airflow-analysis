@@ -159,8 +159,6 @@ class BioWardrobeForceRun(BaseOperator):
                     dag_id=_dag_id,
                     run_id=_run_id,
                     conf={'biowardrobe_uid': biowardrobe_uid, 'run_id': _run_id},
-                    execution_date=datetime.utcnow(),
-                    start_date=datetime.utcnow(),
                     external_trigger=True)
                 logging.info("Creating DagRun {}".format(dr))
                 session.add(dr)
