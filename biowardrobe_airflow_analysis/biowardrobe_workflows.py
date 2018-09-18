@@ -8,7 +8,7 @@ from biowardrobe_cwl_workflows import available
 
 from cwl_airflow_parser import CWLJobGatherer
 
-from .operators import BioWardrobeJobDispatcher, BioWardrobeJobGatherer
+from .operators import BioWardrobeJobDispatcher, BioWardrobeJobFinalizing
 
 _logger = logging.getLogger(__name__)
 
@@ -31,6 +31,6 @@ def create_biowardrobe_workflow(workflow):
     dag.create()
     dag.add(BioWardrobeJobDispatcher(dag=dag), to='top')
     dag.add(CWLJobGatherer(dag=dag), to='bottom')
-    dag.add(BioWardrobeJobGatherer(dag=dag), to='bottom')
+    dag.add(BioWardrobeJobFinalizing(dag=dag), to='bottom')
 
     return dag
