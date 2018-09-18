@@ -69,8 +69,8 @@ setup(
     install_requires=[
         'sqlparse',
         'jsonmerge',
-        'biowardrobe-cwl-workflows',
-        'cwl-airflow-parser == 1.0.20180220071453'
+        'biowardrobe-cwl-workflows == 1.0.20180918070911',
+        'cwl-airflow-parser == 1.0.20180918065555'
     ],
     zip_safe=False,
     entry_points={
