@@ -67,13 +67,10 @@ setup(
     # license='Apache-2.0',
     packages=find_packages(),
     install_requires=[
-        'cwltool == 1.0.20180809224403',
         'sqlparse',
         'jsonmerge',
-        'ruamel.yaml <= 0.15.51',
-        'biowardrobe-cwl-workflows == 1.0.20180423012817',
-        'cwl-airflow-parser == 1.0.20180220071453',
-        'apache-airflow >= 1.10.0, < 1.11'
+        'biowardrobe-cwl-workflows',
+        'cwl-airflow-parser == 1.0.20180220071453'
     ],
     zip_safe=False,
     entry_points={
