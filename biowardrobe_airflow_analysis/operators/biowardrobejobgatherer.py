@@ -82,6 +82,6 @@ class BioWardrobeJobGatherer(CWLJobGatherer):
                                   code=2010,
                                   conn=conn,
                                   cursor=cursor,
-                                  optional_column="dateanalyzee=now()")
+                                  optional_column="dateanalyzee=now(),params='{}'".format(dumps(_params)))
 
         return _job_result
