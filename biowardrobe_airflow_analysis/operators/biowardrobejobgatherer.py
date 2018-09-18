@@ -11,7 +11,7 @@ from airflow.models import BaseOperator
 from cwl_airflow_parser import CWLJobGatherer
 
 from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status, upload_results_to_db2
-from ..biowardrobe.biow_exceptions import BiowBasicException
+from ..biowardrobe.biow_exceptions import BiowBasicException, BiowFileNotFoundException
 
 
 _logger = logging.getLogger(__name__)
@@ -113,10 +113,16 @@ class BioWardrobeJobFinalizing(BaseOperator):
     def execute(self, context):
         upstream_task_ids = [t.task_id for t in self.dag.tasks if isinstance(t, CWLJobGatherer)] + \
                             ([self.reader_task_id] if self.reader_task_id else [])
-        _job_result, promises = self.xcom_pull(context=context, task_ids=upstream_task_ids)
+        _job_result, promises = self.xcom_pull(context=context, task_ids=upstream_task_ids)[0]
+
+        if "output_folder" in promises:
+            self.output_folder = os.path.abspath(promises["output_folder"])
+        else:
+            raise BiowFileNotFoundException(promises['uid'],404, "Can't find data directory")
 
         _logger.debug('{0}: xcom_pull data _job_result: \n {1}'.
                       format(self.task_id, dumps(_job_result, indent=4)))
+
         _logger.debug('{0}: xcom_pull data promises: \n {1}'.
                       format(self.task_id, dumps(promises, indent=4)))
 

@@ -127,13 +127,14 @@ d = BioWardrobeForceRunDAG
         if not os.path.exists(conf.AIRFLOW_CONFIG+'.orig'):
             copyfile(conf.AIRFLOW_CONFIG, conf.AIRFLOW_CONFIG+'.orig')
         with open(conf.AIRFLOW_CONFIG, 'w') as fp:
-            for s in ['mesos', 'kerberos', 'celery', 'smtp', 'email', 'dask', 'ldap']:
-                conf.conf.remove_section(s)
+            # for s in ['mesos', 'kerberos', 'celery', 'smtp', 'email', 'dask', 'ldap']:
+            #     conf.conf.remove_section(s)
 
             conf.conf.add_section('cwl')
             conf.set('cwl', 'tmp_folder', os.path.join(AIRFLOW_HOME, 'tmp'))
 
             conf.set('core', 'logging_level', 'WARNING')
+            conf.set('core', 'load_examples', 'False')
             conf.set('webserver', 'dag_default_view', 'graph')
             conf.set('webserver', 'dag_orientation', 'TB')
             conf.set('webserver', 'web_server_worker_timeout', '120')
