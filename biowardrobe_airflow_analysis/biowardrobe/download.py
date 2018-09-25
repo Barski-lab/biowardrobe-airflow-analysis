@@ -66,7 +66,7 @@ if os.path.isfile(_extra_local_file_):
     with open(_extra_local_file_, 'r') as content_file:
         _extra_local_file_content = content_file.read()
 
-download_base = """
+download_base = """#!/bin/bash
 UUID="{{ ti.xcom_pull(task_ids='branch_download', key='uid') }}"
 URL="{{ ti.xcom_pull(task_ids='branch_download', key='url') }}"
 
@@ -314,7 +314,7 @@ download_local = download_base + """
 #check local dir !!!
 #
 
-FTEST=`find ${UDIR}  -type f -name "*${URL}*" -print|wc -l`
+FTEST=`find ${UDIR} -type f -name "*${URL}*" -print|wc -l`
 if [ ${FTEST} -lt 1 ]; then
       echo "Skip local: File not found ${FTEST}"
 elif [ ${FTEST} -gt 2 ]; then
@@ -323,22 +323,31 @@ elif [ ${FTEST} -gt 2 ]; then
 else
     lines=1
     for i in $(find ${UDIR}  -type f -name "*${URL}*" -print|sort); do
-        mv "${i}" "./${UUID}_${lines}"
+        
+        file -b "${i}"
+        
+        #mv "${i}" "./${UUID}_${lines}"
+        #T=`file -b "./${UUID}_${lines}" | awk '{print $1}'`
+        #echo ${T}
 
-        T=`file -b "./${UUID}_${lines}" | awk '{print $1}'`
-        echo ${T}
-
+        T=`file -b "${i}" | awk '{print $1}'`
         case "${T}" in
-          "bzip2"|"gzip"|"Zip")
-            7z e -so "./${UUID}_${lines}" >"./${UUID}_${lines}.fastq"
-            rm -f "./${UUID}_${lines}"
+            "bzip2"|"gzip"|"Zip")
+                7z e -so "${i}" >"./${UUID}_${lines}.fastq"
+                rm -f "${i}"
             ;;
-          "ASCII")
-            mv "./${UUID}_${lines}" "./${UUID}_${lines}.fastq"
+            "ASCII")
+                mv "${i}" "./${UUID}_${lines}.fastq"
             ;;
-          *)
-            echo "Error: file type unknown"
-            exit 1
+            *)
+            
+                if [[ ( $file == *.gz ) || ( $file == *.bz2 ) ]]; then
+                    7z e -so "${i}" >"./${UUID}_${lines}.fastq"
+                    rm -f "${i}"
+                else
+                    echo "Error: file type unknown"
+                    exit 1            
+                fi
         esac
 
       N1=`awk '(NR+3) % 4 == 0 && $1 ~ /^@/' ${UUID}_${lines}.fastq |wc -l`
