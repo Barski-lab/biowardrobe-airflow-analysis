@@ -25,9 +25,18 @@ from os import path
 from subprocess import check_output, CalledProcessError
 from time import strftime, gmtime
 from setuptools.command.egg_info import egg_info
+import pkg_resources
 
 SETUP_DIR = path.dirname(__file__)
 README = path.join(SETUP_DIR, 'README.md')
+
+SETUPTOOLS_VER = pkg_resources.get_distribution(
+    "setuptools").version.split('.')
+
+RECENT_SETUPTOOLS = int(SETUPTOOLS_VER[0]) > 40 or (
+    int(SETUPTOOLS_VER[0]) == 40 and int(SETUPTOOLS_VER[1]) > 0) or (
+        int(SETUPTOOLS_VER[0]) == 40 and int(SETUPTOOLS_VER[1]) == 0 and
+        int(SETUPTOOLS_VER[2]) > 0)
 
 
 class EggInfoFromGit(egg_info):
@@ -51,6 +60,9 @@ class EggInfoFromGit(egg_info):
                 pass
         return egg_info.tags(self)
 
+    if RECENT_SETUPTOOLS:
+        vtags = property(tags)
+
 
 tagger = EggInfoFromGit
 
@@ -70,8 +82,8 @@ setup(
     install_requires=[
         'sqlparse',
         'jsonmerge',
-        'biowardrobe-cwl-workflows == 1.0.20180918070911',
-        'cwl-airflow-parser == 1.0.20180918220755'
+        'biowardrobe-cwl-workflows == 1.0.20181211062727',
+        'cwl-airflow-parser == 1.0.20181210183459'
     ],
     zip_safe=False,
     entry_points={
