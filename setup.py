@@ -70,7 +70,7 @@ tagger = EggInfoFromGit
 setup(
     name='biowardrobe-airflow-analysis',
     description="Replaces BioWardrobe's backend with CWL Airflow",
-    long_description=open(README).read(),
+    long_description=open(README, 'r+', encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     version='1.0',
     url='https://github.com/datirium/biowardrobe-airflow-analysis',
