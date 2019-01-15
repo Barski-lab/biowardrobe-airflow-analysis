@@ -104,3 +104,5 @@ ENV/
 out
 gen
 
+# MAC stuff
+.DS_Store
