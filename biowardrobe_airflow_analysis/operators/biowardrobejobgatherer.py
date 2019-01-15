@@ -10,7 +10,7 @@ from airflow.models import BaseOperator
 
 from cwl_airflow_parser import CWLJobGatherer
 
-from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status, upload_results_to_db2
+from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status, upload_results_to_db2, trigger_plugins
 from ..biowardrobe.biow_exceptions import BiowBasicException, BiowFileNotFoundException
 
 
@@ -149,6 +149,8 @@ class BioWardrobeJobFinalizing(BaseOperator):
                                   conn=conn,
                                   cursor=cursor,
                                   optional_column="dateanalyzee=now(),params='{}'".format(dumps(_params)))
+                    trigger_plugins(uid=promises['uid'],
+                                    cursor=cursor)
                 except BiowBasicException as ex:
                     update_status(uid=promises['uid'],
                                   message=f'Fail:{ex}',
