@@ -223,6 +223,7 @@ download_aria2 = download_base + """
 function aria_download {
     URL_LOCAL=$1
     PREFIX=$2
+    echo "Process" ${URL_LOCAL}
     aria2c -q -d "./" --user-agent="${user_agent}" --all-proxy="${PROXY}" \
     --always-resume --allow-overwrite --max-resume-failure-tries=40 \
     -o "${TMPFILE}" "${URL_LOCAL}"
@@ -266,11 +267,13 @@ function aria_download {
 }
 
 if [ ${PAIR} = true ]; then
+    echo "Downloading paired end data"
     IFS=';'
     read -ra URL_ARRAY <<< "${URL}"
     aria_download "${URL_ARRAY[0]}"
     aria_download "${URL_ARRAY[1]}" "_2"
 else
+    echo "Downloading single end data"
     aria_download "${URL}"
 fi
 
