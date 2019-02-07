@@ -266,7 +266,7 @@ function aria_download {
     bzip2 "${UUID}${PREFIX}.fastq"
 }
 
-if [ ${PAIR} = true ]; then
+if [ ${PAIR} = "True" ]; then
     echo "Downloading paired end data"
     IFS=';'
     read -ra URL_ARRAY <<< "${URL}"
