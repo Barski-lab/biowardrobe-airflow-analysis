@@ -69,6 +69,7 @@ if os.path.isfile(_extra_local_file_):
 download_base = """#!/bin/bash
 UUID="{{ ti.xcom_pull(task_ids='branch_download', key='uid') }}"
 URL="{{ ti.xcom_pull(task_ids='branch_download', key='url') }}"
+PAIR="{{ ti.xcom_pull(task_ids='branch_download', key='pair') }}"
 
 UDIR="{{ ti.xcom_pull(task_ids='branch_download', key='upload') }}"
 DIR="{{ ti.xcom_pull(task_ids='branch_download', key='output_folder') }}"
@@ -142,6 +143,7 @@ def branch_download_func(**context):
     context['ti'].xcom_push(key='upload', value=data['upload'])
     context['ti'].xcom_push(key='output_folder', value=data['output_folder'])
     context['ti'].xcom_push(key='email', value=data['email'])
+    context['ti'].xcom_push(key='pair', value=data['pair'])
 
     if re.match("^(GSM|SR[ARX])[0-9]+( (GSM|SR[ARX])[0-9]+)*$", data['url']):
         return "download_sra"
@@ -218,47 +220,59 @@ copy_from_biowardrobe.set_upstream(branch_download)
 #  A STEP
 #
 download_aria2 = download_base + """
+function aria_download {
+    URL_LOCAL=$1
+    PREFIX=$2
+    aria2c -q -d "./" --user-agent="${user_agent}" --all-proxy="${PROXY}" \
+    --always-resume --allow-overwrite --max-resume-failure-tries=40 \
+    -o "${TMPFILE}" "${URL_LOCAL}"
 
-aria2c -q -d "./" --user-agent="${user_agent}" --all-proxy="${PROXY}" \
---always-resume --allow-overwrite --max-resume-failure-tries=40 \
--o "${TMPFILE}" "${URL}"
+    ARIA=$?
+    if [ ${ARIA} -ne 0 ]; then
+        rm -f "${TMPFILE}"
+        rm -f "${TMPFILE}".aria2
+        echo "Error: aria2 can't download file"
+        exit ${ARIA}
+    fi
 
-ARIA=$?
-if [ ${ARIA} -ne 0 ]; then
-    rm -f "${TMPFILE}"
-    rm -f "${TMPFILE}".aria2
-    echo "Error: aria2 can't download file"
-    exit ${ARIA}
-fi
+    T=`file -b "${DIR}/${TMPFILE}" |awk '{print $1}'`
+    echo ${T}
 
-T=`file -b "${DIR}/${TMPFILE}" |awk '{print $1}'`
-echo ${T}
+    case "${T}" in
+      "bzip2"|"gzip"|"Zip")
+        7z e -so "${TMPFILE}" >"./${UUID}${PREFIX}.fastq"
+        rm -f "${TMPFILE}"
+        ;;
+      "ASCII")
+        mv "${TMPFILE}" "./${UUID}${PREFIX}.fastq"
+        ;;
+      *)
+        rm -f "${TMPFILE}"
+        echo "Error: file type unknown"
+        exit 1
+    esac
 
-case "${T}" in
-  "bzip2"|"gzip"|"Zip")
-    7z e -so "${TMPFILE}" >"./${UUID}.fastq"
-    rm -f "${TMPFILE}"
-    ;;
-  "ASCII")
-    mv "${TMPFILE}" "./${UUID}.fastq"
-    ;;
-  *)
-    rm -f "${TMPFILE}"
-    echo "Error: file type unknown"
-    exit 1
-esac
+    N1=`awk '(NR+3) % 4 == 0 && $1 ~ /^@/' ${UUID}${PREFIX}.fastq |wc -l`
+    N2=`awk '(NR+1) % 4 == 0 && $1 ~ /^\+/' ${UUID}${PREFIX}.fastq |wc -l`
+    echo "is it fastq? $N1 == $N2"
+    if [ $N1 = $N2 ]; then
+      echo "Ok: fastq"
+    else
+      echo "Error: not a fastq"
+      exit 1
+    fi
 
-N1=`awk '(NR+3) % 4 == 0 && $1 ~ /^@/' ${UUID}.fastq |wc -l`
-N2=`awk '(NR+1) % 4 == 0 && $1 ~ /^\+/' ${UUID}.fastq |wc -l`
-echo "is it fastq? $N1 == $N2"
-if [ $N1 = $N2 ]; then
-  echo "Ok: fastq"
+    bzip2 "${UUID}${PREFIX}.fastq"
+}
+
+if [ ${PAIR} = true ]; then
+    IFS=';'
+    read -ra URL_ARRAY <<< "${URL}"
+    aria_download "${URL_ARRAY[0]}"
+    aria_download "${URL_ARRAY[1]}" "_2"
 else
-  echo "Error: not a fastq"
-  exit 1
+    aria_download "${URL}"
 fi
-
-bzip2 "${UUID}.fastq"
 
 """
 
