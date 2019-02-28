@@ -19,7 +19,17 @@
  limitations under the License.
  ****************************************************************************"""
 
+import os
+import uuid
+import logging
+from json import loads
 from functools import lru_cache
+from sqlalchemy.exc import SQLAlchemyError
+from airflow import settings
+from airflow.models import DagRun
+
+
+_logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=128)
@@ -60,3 +70,29 @@ def update_status(uid, message, code, conn, cursor, optional_column="", optional
     libstatus={code} {optional_column} where uid='{uid}' 
     {optional_where}""")
     conn.commit()
+
+
+def trigger_plugins(uid, cursor):
+    cursor.execute(f"""SELECT e.id FROM experimenttype e
+                       INNER JOIN (labdata l) ON (e.id=l.experimenttype_id)
+                       WHERE l.uid='{uid}'""")
+    exp_type_id = cursor.fetchone()["id"]
+    cursor.execute("SELECT id, ptype, workflow, etype_id FROM plugintype")
+    all_plugins = cursor.fetchall()
+    selected_plugins = [plugin for plugin in all_plugins if exp_type_id in loads(plugin["etype_id"])]
+    for plugin in selected_plugins:
+        try:
+            dag_id = os.path.splitext(plugin['workflow'])[0].replace(".", "_dot_")
+            run_id = "__".join(["trig", uid, str(uuid.uuid4())])
+            payload = {'uid': uid, 'run_id': run_id}
+            session = settings.Session()
+            dr = DagRun(dag_id=dag_id,
+                        run_id=run_id,
+                        conf=payload,
+                        external_trigger=True)
+            session.add(dr)
+            session.commit()
+            session.close()
+            _logger.info(f"""Trigger {plugin["ptype"]} ({dag_id}) plugin for {uid}:\nrun_id: {run_id}""")
+        except SQLAlchemyError as err:
+            _logger.error(f"""Failed to trigger {plugin["ptype"]} ({dag_id}) plugin for {uid}\n {err}""")
