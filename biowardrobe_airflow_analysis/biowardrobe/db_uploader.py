@@ -112,9 +112,9 @@ def upload_iaintersect_result(self, uid, filename):
                 continue
             line_splitted = [None if item == "NULL" else item for item in line.split()]
 
-            if len(line_splitted[0]) > 499:
+            if line_splitted[0] and len(line_splitted[0]) > 499:
                 line_splitted[0] = line_splitted[0][:450]
-            if len(line_splitted[1]) > 499:
+            if line_splitted[1] && len(line_splitted[1]) > 499:
                 line_splitted[1] = line_splitted[1][:450]
 
             self.cursor.execute(SQL + " (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", tuple(line_splitted))
