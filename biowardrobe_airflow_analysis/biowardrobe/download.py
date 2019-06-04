@@ -94,7 +94,7 @@ https_proxy="${{PROXY}}"
 #    'start_date': datetime.utcnow(),
 args = {
     'owner': 'airflow',
-    'start_date': datetime(1970, 1, 1),
+    'start_date': datetime(1970, 1, 1, 1, 1, 1, 1),
     'depends_on_past': False,
     'email': ['biowardrobe@biowardrobe.com'],
     'email_on_failure': False,
@@ -450,7 +450,7 @@ dag_t = DAG(
     dag_id='biowardrobe_download_trigger',
     default_args={
         'owner': 'airflow',
-        'start_date': datetime(1970, 1, 1),
+        'start_date': datetime(1970, 1, 1, 1, 1, 1, 1),
         'depends_on_past': False,
         'email': ['biowardrobe@biowardrobe.com'],
         'email_on_failure': False,
