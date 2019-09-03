@@ -10,7 +10,7 @@ from airflow.hooks.mysql_hook import MySqlHook
 
 from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status
 
-from cwl_airflow_parser import CWLJobDispatcher
+from cwl_airflow import CWLJobDispatcher
 
 _logger = logging.getLogger(__name__)
 

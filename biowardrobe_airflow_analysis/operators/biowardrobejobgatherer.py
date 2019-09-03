@@ -8,7 +8,7 @@ from airflow.hooks.mysql_hook import MySqlHook
 from airflow.models import BaseOperator
 
 
-from cwl_airflow_parser import CWLJobGatherer
+from cwl_airflow import CWLJobGatherer
 
 from ..biowardrobe import get_biowardrobe_data, biowardrobe_connection_id, update_status, upload_results_to_db2, trigger_plugins
 from ..biowardrobe.biow_exceptions import BiowBasicException, BiowFileNotFoundException
