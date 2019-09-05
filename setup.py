@@ -83,7 +83,7 @@ setup(
         'sqlparse',
         'jsonmerge',
         'biowardrobe-cwl-workflows',
-        'cwl-airflow == 1.1.5'
+        'cwl-airflow == 1.1.6'
     ],
     zip_safe=False,
     entry_points={
